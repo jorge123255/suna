@@ -45,7 +45,7 @@ class RapidDataProviderBase:
         url = f"{self.base_url}{endpoint['route']}"
         
         headers = {
-            "x-rapidapi-key": os.getenv("RAPID_API_KEY"),
+            "x-rapidapi-key": os.getenv("RAPIDAPI_API_KEY"),
             "x-rapidapi-host": url.split("//")[1].split("/")[0],
             "Content-Type": "application/json"
         }
