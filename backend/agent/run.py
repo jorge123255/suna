@@ -71,7 +71,7 @@ async def run_agent(
     thread_manager.add_tool(SandboxVisionTool, project_id=project_id, thread_id=thread_id, thread_manager=thread_manager)
         
     # Add data providers tool if RapidAPI key is available
-    if config.RAPID_API_KEY:
+    if config.RAPIDAPI_API_KEY:
         thread_manager.add_tool(DataProvidersTool)
 
     system_message = { "role": "system", "content": get_system_prompt() }
