@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   redis:
     image: redis:7-alpine
@@ -11,6 +13,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      br0:
+        ipv4_address: 192.168.1.3
 
   backend:
     build:
@@ -20,29 +25,69 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/.env:/app/.env:ro
+    env_file:
+      - ./backend/.env
     environment:
       - ENV_MODE=local
-      - REDIS_HOST=redis
+      - REDIS_HOST=192.168.1.3
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=
       - REDIS_SSL=False
+      - SUPABASE_URL=https://hrffzolutdfpaplntjkx.supabase.co
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyZmZ6b2x1dGRmcGFwbG50amt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0MDYxNzMsImV4cCI6MjA2MDk4MjE3M30.SGSeMFc9sZXAXJLxO83pOUqpDWsJ9yTn3uM5lqmv1AE
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyZmZ6b2x1dGRmcGFwbG50amt4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTQwNjE3MywiZXhwIjoyMDYwOTgyMTczfQ.kuAMAJ_EbW-Z3E3EvgAMRkY9zYwrhzQhQ8h5PtWl2Yg
+      - OPENAI_API_KEY=sk-no-key-needed-for-ollama
+      - MODEL_TO_USE=qwen2.5:32b-instruct-q4_K_M
+      - OLLAMA_API_BASE=http://192.168.1.10:11434
+      - OLLAMA_PROVIDER=ollama
+      - TAVILY_API_KEY=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
+      - FIRECRAWL_API_KEY=fc-4d3740181ede46e7bd2b1749113f4531
+      - DAYTONA_API_KEY=dtn_7e43c5fe4bb65eeff1aa9862f7ddb0701f30c5e9ca7f03dfec158307831f5e57
+      - DAYTONA_SERVER_URL=https://app.daytona.io/api
+      - DAYTONA_TARGET=us
     depends_on:
       redis:
         condition: service_healthy
+    networks:
+      br0:
+        ipv4_address: 192.168.1.160
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        SUPABASE_URL: https://hrffzolutdfpaplntjkx.supabase.co
+        SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyZmZ6b2x1dGRmcGFwbG50amt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0MDYxNzMsImV4cCI6MjA2MDk4MjE3M30.SGSeMFc9sZXAXJLxO83pOUqpDWsJ9yTn3uM5lqmv1AE
+        SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyZmZ6b2x1dGRmcGFwbG50amt4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTQwNjE3MywiZXhwIjoyMDYwOTgyMTczfQ.kuAMAJ_EbW-Z3E3EvgAMRkY9zYwrhzQhQ8h5PtWl2Yg
+        NEXT_PUBLIC_BACKEND_URL: http://localhost:8000
+        FIRECRAWL_API_KEY: fc-4d3740181ede46e7bd2b1749113f4531
     ports:
       - "3000:3000"
     volumes:
       - ./frontend/.env.local:/app/.env.local:ro
+    env_file:
+      - ./frontend/.env.local
     environment:
       - NODE_ENV=production
-    command: ["npm", "run", "start"]
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+      - NEXT_PUBLIC_SUPABASE_URL=https://hrffzolutdfpaplntjkx.supabase.co
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyZmZ6b2x1dGRmcGFwbG50amt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0MDYxNzMsImV4cCI6MjA2MDk4MjE3M30.SGSeMFc9sZXAXJLxO83pOUqpDWsJ9yTn3uM5lqmv1AE
+      - NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyZmZ6b2x1dGRmcGFwbG50amt4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTQwNjE3MywiZXhwIjoyMDYwOTgyMTczfQ.kuAMAJ_EbW-Z3E3EvgAMRkY9zYwrhzQhQ8h5PtWl2Yg
+      - FIRECRAWL_API_KEY=fc-4d3740181ede46e7bd2b1749113f4531
+      - DAYTONA_API_KEY=dtn_7e43c5fe4bb65eeff1aa9862f7ddb0701f30c5e9ca7f03dfec158307831f5e57
+      - DAYTONA_SERVER_URL=https://app.daytona.io/api
+      - DAYTONA_TARGET=us
+      - REDIS_HOST=192.168.1.3
     depends_on:
       - backend
+    networks:
+      br0:
+        ipv4_address: 192.168.1.161
+    command: ["npm", "run", "start"]
 
 volumes:
   redis-data:
+
+networks:
+  br0:
+    external: true

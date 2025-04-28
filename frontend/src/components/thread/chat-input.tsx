@@ -29,7 +29,7 @@ const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || '';
 
 // Local storage keys
 const STORAGE_KEY_MODEL = 'suna-preferred-model';
-const DEFAULT_MODEL_ID = "sonnet-3.7"; // Define default model ID
+const DEFAULT_MODEL_ID = "qwen2.5:32b-instruct-q4_K_M"; // Define default model ID
 
 interface ChatInputProps {
   onSubmit: (message: string, options?: { model_name?: string; enable_thinking?: boolean }) => void;
@@ -79,6 +79,7 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(({
 
   // Define model options array earlier so it can be used in useEffect
   const modelOptions = [
+    { id: "qwen2.5:32b-instruct-q4_K_M", label: "Qwen 32B (Local)" },
     { id: "sonnet-3.7", label: "Sonnet 3.7" },
     { id: "sonnet-3.7-thinking", label: "Sonnet 3.7 (Thinking)" },
     { id: "gpt-4.1", label: "GPT-4.1" },

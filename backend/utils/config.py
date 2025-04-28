@@ -123,7 +123,11 @@ class Configuration:
     AWS_REGION_NAME: Optional[str] = None
     
     # Model configuration
-    MODEL_TO_USE: Optional[str] = "anthropic/claude-3-7-sonnet-latest"
+    MODEL_TO_USE: Optional[str] = "qwen2.5:32b-instruct-q4_K_M"
+    
+    # Ollama configuration
+    OLLAMA_API_BASE: Optional[str] = "http://192.168.1.10:11434"
+    OLLAMA_PROVIDER: Optional[str] = "ollama"
     
     # Supabase configuration
     SUPABASE_URL: str

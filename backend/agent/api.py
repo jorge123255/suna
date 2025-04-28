@@ -37,10 +37,11 @@ MODEL_NAME_ALIASES = {
     "grok-3": "xai/grok-3-fast-latest",
     "deepseek": "deepseek/deepseek-chat",
     "grok-3-mini": "xai/grok-3-mini-fast-beta",
+    "qwen2.5:32b-instruct-q4_K_M": "qwen2.5:32b-instruct-q4_K_M",
 }
 
 class AgentStartRequest(BaseModel):
-    model_name: Optional[str] = "anthropic/claude-3-7-sonnet-latest"
+    model_name: Optional[str] = "qwen2.5:32b-instruct-q4_K_M"
     enable_thinking: Optional[bool] = False
     reasoning_effort: Optional[str] = 'low'
     stream: Optional[bool] = True
@@ -853,7 +854,7 @@ async def generate_and_update_project_name(project_id: str, prompt: str):
 @router.post("/agent/initiate", response_model=InitiateAgentResponse)
 async def initiate_agent_with_files(
     prompt: str = Form(...),
-    model_name: Optional[str] = Form("anthropic/claude-3-7-sonnet-latest"),
+    model_name: Optional[str] = Form("qwen2.5:32b-instruct-q4_K_M"),
     enable_thinking: Optional[bool] = Form(False),
     reasoning_effort: Optional[str] = Form("low"),
     stream: Optional[bool] = Form(True),

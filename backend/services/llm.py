@@ -47,6 +47,13 @@ def setup_api_keys() -> None:
         else:
             logger.warning(f"No API key found for provider: {provider}")
     
+    # Set up Ollama configuration if available
+    if hasattr(config, 'OLLAMA_API_BASE') and config.OLLAMA_API_BASE:
+        os.environ['OLLAMA_API_BASE'] = config.OLLAMA_API_BASE
+        logger.debug(f"Set OLLAMA_API_BASE to {config.OLLAMA_API_BASE}")
+        if hasattr(config, 'OLLAMA_PROVIDER') and config.OLLAMA_PROVIDER:
+            logger.debug(f"Using Ollama provider: {config.OLLAMA_PROVIDER}")
+    
     # Set up OpenRouter API base if not already set
     if config.OPENROUTER_API_KEY and config.OPENROUTER_API_BASE:
         os.environ['OPENROUTER_API_BASE'] = config.OPENROUTER_API_BASE
@@ -125,13 +132,24 @@ def prepare_params(
         })
         logger.debug(f"Added {len(tools)} tools to API parameters")
 
-    # # Add Claude-specific headers
-    if "claude" in model_name.lower() or "anthropic" in model_name.lower():
+    # Add Ollama-specific configuration
+    if hasattr(config, 'OLLAMA_PROVIDER') and config.OLLAMA_PROVIDER and config.OLLAMA_PROVIDER.lower() == 'ollama':
+        # Only add ollama/ prefix if it's not already there
+        if not model_name.startswith('ollama/'):
+            params["model"] = f"ollama/{model_name}"
+        # Set API base if available
+        if hasattr(config, 'OLLAMA_API_BASE') and config.OLLAMA_API_BASE:
+            params["api_base"] = config.OLLAMA_API_BASE
+        logger.debug(f"Using Ollama provider for model: {params['model']} with API base: {params.get('api_base', 'default')}")  
+
+    # Add Claude-specific headers
+    elif "claude" in model_name.lower() or "anthropic" in model_name.lower():
         params["extra_headers"] = {
             # "anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15"
             "anthropic-beta": "output-128k-2025-02-19"
         }
         logger.debug("Added Claude-specific headers")
+
     
     # Add OpenRouter-specific parameters
     if model_name.startswith("openrouter/"):
