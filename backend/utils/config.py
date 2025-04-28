@@ -144,6 +144,7 @@ class Configuration:
     DAYTONA_API_KEY: str
     DAYTONA_SERVER_URL: str
     DAYTONA_TARGET: str
+    DAYTONA_BYPASS_QUOTA: bool = True  # Bypass workspace quota for local development
     
     # Search and other API keys
     TAVILY_API_KEY: str
