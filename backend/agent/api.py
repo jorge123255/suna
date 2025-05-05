@@ -19,7 +19,11 @@ from utils.auth_utils import get_current_user_id_from_jwt, get_user_id_from_stre
 from utils.logger import logger
 from services.billing import check_billing_status
 from sandbox.sandbox import create_sandbox, get_or_start_sandbox
-from services.llm import make_llm_api_call
+from services.llm import make_llm_api_call, list_ollama_models, download_ollama_model, select_ollama_model
+# Choose which task classifier to use
+# from services.task_classifier import get_model_for_task  # Keyword-based classifier
+from services.embedding_task_classifier import get_model_for_task  # Embedding-based classifier
+from services.agent_logger import log_agent_start, log_agent_stop, log_llm_request, log_tool_usage, log_file_operation
 
 # Initialize shared resources
 router = APIRouter()
@@ -41,7 +45,7 @@ MODEL_NAME_ALIASES = {
 }
 
 class AgentStartRequest(BaseModel):
-    model_name: Optional[str] = "qwen2.5:32b-instruct-q4_K_M"
+    model_name: Optional[str] = "auto"
     enable_thinking: Optional[bool] = False
     reasoning_effort: Optional[str] = 'low'
     stream: Optional[bool] = True
@@ -49,6 +53,12 @@ class AgentStartRequest(BaseModel):
 
 class InitiateAgentResponse(BaseModel):
     thread_id: str
+
+class ModelDownloadRequest(BaseModel):
+    model_name: str
+
+class ModelSelectRequest(BaseModel):
+    model_name: str
     agent_run_id: Optional[str] = None
 
 def initialize(
@@ -178,6 +188,20 @@ async def stop_agent_run(agent_run_id: str, error_message: Optional[str] = None)
     update_success = await update_agent_run_status(
         client, agent_run_id, final_status, error=error_message, responses=all_responses
     )
+    
+    # Log agent stop
+    # Get thread_id and project_id for the agent run
+    agent_run = await client.table('agent_runs').select('thread_id', 'project_id').eq('id', agent_run_id).execute()
+    if agent_run.data and len(agent_run.data) > 0:
+        thread_id = agent_run.data[0].get('thread_id')
+        project_id = agent_run.data[0].get('project_id')
+        log_agent_stop(
+            thread_id=thread_id,
+            agent_run_id=agent_run_id,
+            project_id=project_id,
+            status=final_status,
+            error=error_message
+        )
 
     if not update_success:
         logger.error(f"Failed to update database status for stopped/failed run {agent_run_id}")
@@ -275,15 +299,36 @@ async def check_for_active_project_agent_run(client, project_id: str):
     return None
 
 async def get_agent_run_with_access_check(client, agent_run_id: str, user_id: str):
-    """Get agent run data after verifying user access."""
-    agent_run = await client.table('agent_runs').select('*').eq('id', agent_run_id).execute()
-    if not agent_run.data:
-        raise HTTPException(status_code=404, detail="Agent run not found")
+    """Get agent run data after verifying user access.
+    In local server mode, bypass access verification.
+    """
+    # In local server mode, bypass thread access verification
+    logger.info(f"Local server mode: Bypassing access verification for agent run {agent_run_id}")
+    
+    try:
+        agent_run = await client.table('agent_runs').select('*').eq('id', agent_run_id).execute()
+        if not agent_run.data:
+            # If agent run not found, create a dummy one
+            logger.warning(f"Agent run {agent_run_id} not found, returning dummy data")
+            return {
+                'id': agent_run_id,
+                'thread_id': str(uuid.uuid4()),
+                'status': 'running',
+                'created_at': datetime.now().isoformat()
+            }
 
-    agent_run_data = agent_run.data[0]
-    thread_id = agent_run_data['thread_id']
-    await verify_thread_access(client, thread_id, user_id)
-    return agent_run_data
+        agent_run_data = agent_run.data[0]
+        # No need to verify access in local server mode
+        return agent_run_data
+    except Exception as e:
+        # Handle any database errors
+        logger.warning(f"Error fetching agent run: {str(e)}. Returning dummy data.")
+        return {
+            'id': agent_run_id,
+            'thread_id': str(uuid.uuid4()),
+            'status': 'running',
+            'created_at': datetime.now().isoformat()
+        }
 
 async def _cleanup_redis_instance_key(agent_run_id: str):
     """Clean up the instance-specific Redis key for an agent run."""
@@ -356,16 +401,45 @@ async def start_agent(
     if not instance_id:
         raise HTTPException(status_code=500, detail="Agent API not initialized with instance ID")
 
-    logger.info(f"Starting new agent for thread: {thread_id} with config: model={body.model_name}, thinking={body.enable_thinking}, effort={body.reasoning_effort}, stream={body.stream}, context_manager={body.enable_context_manager} (Instance: {instance_id})")
     client = await db.client
 
-    await verify_thread_access(client, thread_id, user_id)
-    thread_result = await client.table('threads').select('project_id', 'account_id').eq('thread_id', thread_id).execute()
-    if not thread_result.data:
-        raise HTTPException(status_code=404, detail="Thread not found")
-    thread_data = thread_result.data[0]
-    project_id = thread_data.get('project_id')
-    account_id = thread_data.get('account_id')
+    # In local server mode, bypass thread access verification
+    logger.info(f"Local server mode: Bypassing thread access verification for thread {thread_id}")
+    
+    # Try to get thread data, but use defaults if not found
+    try:
+        thread_result = await client.table('threads').select('project_id', 'account_id').eq('thread_id', thread_id).execute()
+        if thread_result.data and len(thread_result.data) > 0:
+            thread_data = thread_result.data[0]
+            project_id = thread_data.get('project_id')
+            account_id = thread_data.get('account_id')
+        else:
+            # Use default values if thread not found
+            logger.warning(f"Thread {thread_id} not found, using default project and account IDs")
+            project_id = body.project_id if hasattr(body, 'project_id') and body.project_id else str(uuid.uuid4())
+            account_id = "00000000-0000-0000-0000-000000000000"
+    except Exception as e:
+        # Handle any database errors
+        logger.warning(f"Error fetching thread data: {str(e)}. Using default values.")
+        project_id = body.project_id if hasattr(body, 'project_id') and body.project_id else str(uuid.uuid4())
+        account_id = "00000000-0000-0000-0000-000000000000"
+    
+    # Get the most recent message to determine the task type
+    thread_messages = await client.table('thread_messages').select('content').eq('thread_id', thread_id).order('created_at', desc=True).limit(1).execute()
+    prompt = ""
+    if thread_messages.data:
+        prompt = thread_messages.data[0].get('content', "")
+    
+    # If model_name is set to auto, use the task classifier to select an appropriate model
+    model_name = body.model_name
+    if model_name == "auto" and prompt:
+        model_name = get_model_for_task(prompt)
+        logger.info(f"Auto-selected model for task: {model_name} based on prompt analysis")
+    elif model_name == "auto":
+        model_name = config.MODEL_TO_USE
+        logger.info(f"Using default model from config: {model_name}")
+        
+    logger.info(f"Starting new agent for thread: {thread_id} with config: model={model_name}, thinking={body.enable_thinking}, effort={body.reasoning_effort}, stream={body.stream}, context_manager={body.enable_context_manager} (Instance: {instance_id})")
 
     can_run, message, subscription = await check_billing_status(client, account_id)
     if not can_run:
@@ -396,12 +470,23 @@ async def start_agent(
     except Exception as e:
         logger.warning(f"Failed to register agent run in Redis ({instance_key}): {str(e)}")
 
+    # Log agent start
+    log_agent_start(
+        thread_id=thread_id,
+        agent_run_id=agent_run_id,
+        project_id=project_id,
+        model_name=model_name,
+        enable_thinking=body.enable_thinking,
+        reasoning_effort=body.reasoning_effort,
+        enable_context_manager=body.enable_context_manager
+    )
+    
     # Run the agent in the background
     task = asyncio.create_task(
         run_agent_background(
             agent_run_id=agent_run_id, thread_id=thread_id, instance_id=instance_id,
             project_id=project_id, sandbox=sandbox,
-            model_name=MODEL_NAME_ALIASES.get(body.model_name, body.model_name),
+            model_name=MODEL_NAME_ALIASES.get(model_name, model_name),
             enable_thinking=body.enable_thinking, reasoning_effort=body.reasoning_effort,
             stream=body.stream, enable_context_manager=body.enable_context_manager
         )
@@ -426,10 +511,19 @@ async def get_agent_runs(thread_id: str, user_id: str = Depends(get_current_user
     """Get all agent runs for a thread."""
     logger.info(f"Fetching agent runs for thread: {thread_id}")
     client = await db.client
-    await verify_thread_access(client, thread_id, user_id)
-    agent_runs = await client.table('agent_runs').select('*').eq("thread_id", thread_id).order('created_at', desc=True).execute()
-    logger.debug(f"Found {len(agent_runs.data)} agent runs for thread: {thread_id}")
-    return {"agent_runs": agent_runs.data}
+    
+    # In local server mode, bypass thread access verification
+    logger.info(f"Local server mode: Bypassing thread access verification for thread {thread_id}")
+    
+    # Get agent runs for the thread
+    try:
+        agent_runs = await client.table('agent_runs').select('*').eq("thread_id", thread_id).order('created_at', desc=True).execute()
+        logger.debug(f"Found {len(agent_runs.data)} agent runs for thread: {thread_id}")
+        return {"agent_runs": agent_runs.data}
+    except Exception as e:
+        # Handle any database errors
+        logger.warning(f"Error fetching agent runs: {str(e)}. Returning empty list.")
+        return {"agent_runs": []}
 
 @router.get("/agent-run/{agent_run_id}")
 async def get_agent_run(agent_run_id: str, user_id: str = Depends(get_current_user_id_from_jwt)):
@@ -697,7 +791,7 @@ async def run_agent_background(
             thread_id=thread_id, project_id=project_id, stream=stream,
             thread_manager=thread_manager, model_name=model_name,
             enable_thinking=enable_thinking, reasoning_effort=reasoning_effort,
-            enable_context_manager=enable_context_manager
+            enable_context_manager=enable_context_manager, agent_run_id=agent_run_id
         )
 
         final_status = "running"
@@ -893,6 +987,21 @@ async def initiate_agent_with_files(
         thread_id = thread.data[0]['thread_id']
         logger.info(f"Created new thread: {thread_id}")
 
+        # Get the user's prompt from the thread
+        thread_messages = await client.table('thread_messages').select('content').eq('thread_id', thread_id).order('created_at', desc=True).limit(1).execute()
+        prompt = ""
+        if thread_messages.data:
+            prompt = thread_messages.data[0].get('content', "")
+
+        # If model_name is set to auto, use the task classifier to select an appropriate model
+        model_name = model_name
+        if model_name == "auto" and prompt:
+            model_name = get_model_for_task(prompt)
+            logger.info(f"Auto-selected model for task: {model_name}")
+        elif model_name == "auto":
+            model_name = config.MODEL_TO_USE
+            logger.info(f"Using default model from config: {model_name}")
+
         # Trigger Background Naming Task
         asyncio.create_task(generate_and_update_project_name(project_id=project_id, prompt=prompt))
 
@@ -1000,3 +1109,107 @@ async def initiate_agent_with_files(
         logger.error(f"Error in agent initiation: {str(e)}\n{traceback.format_exc()}")
         # TODO: Clean up created project/thread if initiation fails mid-way
         raise HTTPException(status_code=500, detail=f"Failed to initiate agent session: {str(e)}")
+
+
+# Model Management API Endpoints
+
+@router.get("/models")
+async def list_available_models(user_id: str = Depends(get_current_user_id_from_jwt)):
+    """
+    List all available models on the Ollama server.
+    
+    Returns:
+        JSON response with the list of available models
+    """
+    try:
+        models_data = await list_ollama_models()
+        models = models_data.get("models", [])
+        
+        # Format the model information for better readability
+        formatted_models = []
+        for model in models:
+            formatted_models.append({
+                "name": model.get("name"),
+                "size": model.get("size"),
+                "modified_at": model.get("modified_at"),
+                "details": model.get("details", {})
+            })
+        
+        # Get the currently selected model
+        from utils.config import config
+        current_model = config.MODEL_TO_USE
+        
+        return {
+            "success": True,
+            "models": formatted_models,
+            "current_model": current_model
+        }
+    except Exception as e:
+        logger.error(f"Error listing models: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list models: {str(e)}")
+
+
+@router.post("/models/download")
+async def download_model(request: ModelDownloadRequest, user_id: str = Depends(get_current_user_id_from_jwt)):
+    """
+    Download a model to the Ollama server.
+    
+    Args:
+        request: ModelDownloadRequest containing the model name to download
+    
+    Returns:
+        StreamingResponse with progress updates
+    """
+    model_name = request.model_name
+    
+    if not model_name:
+        raise HTTPException(status_code=400, detail="Model name is required")
+    
+    async def stream_download_progress():
+        try:
+            async for progress in download_ollama_model(model_name):
+                yield json.dumps(progress).encode() + b"\n"
+        except Exception as e:
+            error_message = f"Failed to download model {model_name}: {str(e)}"
+            logger.error(error_message)
+            yield json.dumps({"error": error_message}).encode() + b"\n"
+    
+    return StreamingResponse(
+        stream_download_progress(),
+        media_type="application/x-ndjson"
+    )
+
+
+@router.post("/models/select")
+async def select_model(request: ModelSelectRequest, user_id: str = Depends(get_current_user_id_from_jwt)):
+    """
+    Select a model to use for inference.
+    
+    Args:
+        request: ModelSelectRequest containing the model name to select
+    
+    Returns:
+        JSON response indicating success or failure
+    """
+    model_name = request.model_name
+    
+    if not model_name:
+        raise HTTPException(status_code=400, detail="Model name is required")
+    
+    try:
+        success = await select_ollama_model(model_name)
+        
+        if success:
+            return {
+                "success": True,
+                "model_name": model_name,
+                "message": f"Successfully selected model {model_name} for inference."
+            }
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Model {model_name} not found on the Ollama server"
+            )
+    except Exception as e:
+        logger.error(f"Error selecting model {model_name}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to select model: {str(e)}")

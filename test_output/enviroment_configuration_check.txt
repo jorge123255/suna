@@ -1,0 +1,276 @@
+/app/environment_configuration_check.py:24: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+  import pkg_resources
+
+================================================================================
+🧪 SUNA ENVIRONMENT CONFIGURATION CHECK
+================================================================================
+🖥️  Checking system information...
+  os: Linux
+  os_version: #2 SMP PREEMPT_DYNAMIC Thu Feb 20 13:33:15 PST 2025
+  python_version: 3.11.12
+  hostname: 49c1a41a6536
+  architecture: 64bit
+  cpu_count: 32
+  docker_version: Not installed or not in PATH
+  k8s_env: No
+
+🔑 Checking environment variables...
+  ✅ SUPABASE_URL: https://hrffzolutdfpaplntjkx.supabase.co
+  ✅ SUPABASE_ANON_KEY: eyJh...v1AE
+  ✅ SUPABASE_SERVICE_ROLE_KEY: eyJh...l2Yg
+  ✅ REDIS_HOST: redis
+  ✅ REDIS_PORT: 6379
+  ✅ DAYTONA_API_KEY: dtn_...5e57
+  ✅ DAYTONA_SERVER_URL: https://app.daytona.io/api
+  ✅ DAYTONA_TARGET: us
+
+  Tool-specific variables:
+  ✅ ANTHROPIC_API_KEY: dumm...ummy
+  ✅ TAVILY_API_KEY: tvly...rbGz
+  ✅ FIRECRAWL_API_KEY: fc-4...4531
+  ⚠️ RAPID_API_KEY: Missing (may affect related tools)
+
+📦 Checking Python package dependencies...
+  ⚠️ requirements.txt not found at /app/backend/requirements.txt
+  ✅ fastapi: 0.110.0
+  ✅ uvicorn: 0.27.1
+  ✅ python-dotenv: 1.0.1
+  ✅ redis: 5.2.1
+  ✅ supabase: 2.15.1
+  ❌ anthropic: Not installed
+  ✅ litellm: 1.66.2
+  ✅ websockets: 14.2
+  ✅ httpx: 0.28.1
+  ❌ beautifulsoup4: Not installed
+  ✅ pillow: 11.2.1
+  ✅ pyjwt: 2.10.1
+  ✅ asyncio: 3.4.3
+  ✅ markdown: 3.5.2
+
+🗄️  Checking Supabase database connection...
+2025-05-04 02:02:02,528 - utils.config - INFO - Environment mode: local
+Added file handler for: /app/logs/agentpress_20250504.log
+Added console handler with level: 20
+2025-05-04 02:02:02,528 - agentpress - DEBUG - Supabase client not initialized, initializing now
+2025-05-04 02:02:02,528 - agentpress - DEBUG - Initializing Supabase connection
+2025-05-04 02:02:02,565 - agentpress - DEBUG - Database connection initialized with Supabase using SERVICE_ROLE_KEY
+2025-05-04 02:02:02,765 - httpx - INFO - HTTP Request: GET https://hrffzolutdfpaplntjkx.supabase.co/rest/v1/accounts?select=account_id&limit=1 "HTTP/2 404 Not Found"
+  ❌ Failed to connect to Supabase: {'code': '42P01', 'details': None, 'hint': None, 'message': 'relation "public.accounts" does not exist'}
+
+🔄 Checking Redis connection...
+2025-05-04 02:02:02,782 - INFO - Initializing Redis connection
+2025-05-04 02:02:02,782 - agentpress - INFO - Initializing Redis connection
+2025-05-04 02:02:02,783 - INFO - Initializing Redis connection to redis:6379
+2025-05-04 02:02:02,783 - agentpress - INFO - Initializing Redis connection to redis:6379
+2025-05-04 02:02:02,784 - INFO - Successfully connected to Redis
+2025-05-04 02:02:02,784 - agentpress - INFO - Successfully connected to Redis
+  ✅ Successfully connected to Redis
+  ✅ Successfully set and retrieved a value from Redis
+
+📦 Checking sandbox setup...
+2025-05-04 02:02:03,667 - httpx - INFO - HTTP Request: GET https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json "HTTP/1.1 200 OK"
+2025-05-04 02:02:03,997 - agentpress - DEBUG - API key set for provider: OPENAI
+2025-05-04 02:02:03,997 - agentpress - DEBUG - API key set for provider: ANTHROPIC
+2025-05-04 02:02:03,997 - WARNING - No API key found for provider: GROQ
+2025-05-04 02:02:03,997 - agentpress - WARNING - No API key found for provider: GROQ
+2025-05-04 02:02:03,997 - WARNING - No API key found for provider: OPENROUTER
+2025-05-04 02:02:03,997 - agentpress - WARNING - No API key found for provider: OPENROUTER
+2025-05-04 02:02:03,997 - agentpress - DEBUG - Set OLLAMA_API_BASE to http://192.168.1.10:11434
+2025-05-04 02:02:03,997 - agentpress - DEBUG - Using Ollama provider: ollama
+2025-05-04 02:02:03,997 - WARNING - Missing AWS credentials for Bedrock integration - access_key: False, secret_key: False, region: None
+2025-05-04 02:02:03,997 - agentpress - WARNING - Missing AWS credentials for Bedrock integration - access_key: False, secret_key: False, region: None
+2025-05-04 02:02:04,006 - agentpress - DEBUG - Initializing Daytona sandbox configuration
+2025-05-04 02:02:04,006 - agentpress - DEBUG - Daytona API key configured successfully
+2025-05-04 02:02:04,006 - agentpress - DEBUG - Daytona server URL set to: https://app.daytona.io/api
+2025-05-04 02:02:04,006 - agentpress - DEBUG - Daytona target set to: us
+2025-05-04 02:02:04,006 - agentpress - DEBUG - Daytona client initialized
+  ❌ Daytona SDK is not installed
+
+🌐 Checking browser automation...
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Applying XML schema with tag 'browser-navigate-to' to function browser_navigate_to
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added XML mapping for parameter 'url' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added xml schema to function browser_navigate_to
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Applying OpenAPI schema to function browser_navigate_to
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added openapi schema to function browser_navigate_to
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Applying XML schema with tag 'browser-go-back' to function browser_go_back
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added xml schema to function browser_go_back
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Applying OpenAPI schema to function browser_go_back
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added openapi schema to function browser_go_back
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Applying XML schema with tag 'browser-wait' to function browser_wait
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added XML mapping for parameter 'seconds' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added xml schema to function browser_wait
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Applying OpenAPI schema to function browser_wait
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added openapi schema to function browser_wait
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Applying XML schema with tag 'browser-click-element' to function browser_click_element
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added XML mapping for parameter 'index' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added xml schema to function browser_click_element
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Applying OpenAPI schema to function browser_click_element
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added openapi schema to function browser_click_element
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Applying XML schema with tag 'browser-input-text' to function browser_input_text
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added XML mapping for parameter 'index' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added XML mapping for parameter 'text' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,008 - agentpress - DEBUG - Added xml schema to function browser_input_text
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying OpenAPI schema to function browser_input_text
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added openapi schema to function browser_input_text
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying XML schema with tag 'browser-send-keys' to function browser_send_keys
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added XML mapping for parameter 'keys' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added xml schema to function browser_send_keys
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying OpenAPI schema to function browser_send_keys
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added openapi schema to function browser_send_keys
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying XML schema with tag 'browser-switch-tab' to function browser_switch_tab
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added XML mapping for parameter 'page_id' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added xml schema to function browser_switch_tab
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying OpenAPI schema to function browser_switch_tab
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added openapi schema to function browser_switch_tab
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying XML schema with tag 'browser-close-tab' to function browser_close_tab
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added XML mapping for parameter 'page_id' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added xml schema to function browser_close_tab
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying OpenAPI schema to function browser_close_tab
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added openapi schema to function browser_close_tab
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying XML schema with tag 'browser-scroll-down' to function browser_scroll_down
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added XML mapping for parameter 'amount' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added xml schema to function browser_scroll_down
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying OpenAPI schema to function browser_scroll_down
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added openapi schema to function browser_scroll_down
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying XML schema with tag 'browser-scroll-up' to function browser_scroll_up
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added XML mapping for parameter 'amount' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added xml schema to function browser_scroll_up
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying OpenAPI schema to function browser_scroll_up
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added openapi schema to function browser_scroll_up
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying XML schema with tag 'browser-scroll-to-text' to function browser_scroll_to_text
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added XML mapping for parameter 'text' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added xml schema to function browser_scroll_to_text
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying OpenAPI schema to function browser_scroll_to_text
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added openapi schema to function browser_scroll_to_text
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying XML schema with tag 'browser-get-dropdown-options' to function browser_get_dropdown_options
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added XML mapping for parameter 'index' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added xml schema to function browser_get_dropdown_options
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying OpenAPI schema to function browser_get_dropdown_options
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added openapi schema to function browser_get_dropdown_options
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Applying XML schema with tag 'browser-select-dropdown-option' to function browser_select_dropdown_option
+2025-05-04 02:02:04,009 - agentpress - DEBUG - Added XML mapping for parameter 'index' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added XML mapping for parameter 'text' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added xml schema to function browser_select_dropdown_option
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Applying OpenAPI schema to function browser_select_dropdown_option
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added openapi schema to function browser_select_dropdown_option
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Applying XML schema with tag 'browser-drag-drop' to function browser_drag_drop
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added XML mapping for parameter 'element_source' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added XML mapping for parameter 'element_target' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added XML mapping for parameter 'coord_source_x' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added XML mapping for parameter 'coord_source_y' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added XML mapping for parameter 'coord_target_x' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added XML mapping for parameter 'coord_target_y' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added xml schema to function browser_drag_drop
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Applying OpenAPI schema to function browser_drag_drop
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added openapi schema to function browser_drag_drop
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Applying XML schema with tag 'browser-click-coordinates' to function browser_click_coordinates
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added XML mapping for parameter 'x' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added XML mapping for parameter 'y' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added xml schema to function browser_click_coordinates
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Applying OpenAPI schema to function browser_click_coordinates
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Added openapi schema to function browser_click_coordinates
+  ✅ SandboxBrowserTool module is available
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Initialized new ToolRegistry instance
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Initializing tool class: SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_click_coordinates' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_click_element' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_close_tab' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_drag_drop' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_get_dropdown_options' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_go_back' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_input_text' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_navigate_to' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_scroll_down' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_scroll_to_text' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_scroll_up' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_select_dropdown_option' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_send_keys' in SandboxBrowserTool
+2025-05-04 02:02:04,010 - agentpress - DEBUG - Registered schemas for method 'browser_switch_tab' in SandboxBrowserTool
+2025-05-04 02:02:04,011 - agentpress - DEBUG - Registered schemas for method 'browser_wait' in SandboxBrowserTool
+  ⏳ Initializing sandbox for browser automation...
+2025-05-04 02:02:04,152 - httpx - INFO - HTTP Request: GET https://hrffzolutdfpaplntjkx.supabase.co/rest/v1/projects?select=%2A&project_id=eq.browser-test-d4a19a14 "HTTP/2 400 Bad Request"
+2025-05-04 02:02:04,152 - ERROR - Error retrieving sandbox for project browser-test-d4a19a14: {'code': '22P02', 'details': None, 'hint': None, 'message': 'invalid input syntax for type uuid: "browser-test-d4a19a14"'}
+Traceback (most recent call last):
+  File "/app/sandbox/sandbox.py", line 158, in _ensure_sandbox
+    project = await client.table('projects').select('*').eq('project_id', self.project_id).execute()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/postgrest/_async/request_builder.py", line 78, in execute
+    raise APIError(r.json())
+postgrest.exceptions.APIError: {'code': '22P02', 'details': None, 'hint': None, 'message': 'invalid input syntax for type uuid: "browser-test-d4a19a14"'}
+2025-05-04 02:02:04,152 - agentpress - ERROR - Error retrieving sandbox for project browser-test-d4a19a14: {'code': '22P02', 'details': None, 'hint': None, 'message': 'invalid input syntax for type uuid: "browser-test-d4a19a14"'}
+Traceback (most recent call last):
+  File "/app/sandbox/sandbox.py", line 158, in _ensure_sandbox
+    project = await client.table('projects').select('*').eq('project_id', self.project_id).execute()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/postgrest/_async/request_builder.py", line 78, in execute
+    raise APIError(r.json())
+postgrest.exceptions.APIError: {'code': '22P02', 'details': None, 'hint': None, 'message': 'invalid input syntax for type uuid: "browser-test-d4a19a14"'}
+  ❌ Failed to initialize sandbox: {'code': '22P02', 'details': None, 'hint': None, 'message': 'invalid input syntax for type uuid: "browser-test-d4a19a14"'}
+
+🔍 Checking web search tool...
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Applying XML schema with tag 'web-search' to function web_search
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Added XML mapping for parameter 'query' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Added XML mapping for parameter 'num_results' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Added xml schema to function web_search
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Applying OpenAPI schema to function web_search
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Added openapi schema to function web_search
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Applying XML schema with tag 'scrape-webpage' to function scrape_webpage
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Added XML mapping for parameter 'url' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Added xml schema to function scrape_webpage
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Applying OpenAPI schema to function scrape_webpage
+2025-05-04 02:02:04,178 - agentpress - DEBUG - Added openapi schema to function scrape_webpage
+  ✅ WebSearchTool module is available
+  ✅ TAVILY_API_KEY is set
+2025-05-04 02:02:04,179 - agentpress - DEBUG - Initialized new ToolRegistry instance
+  ❌ Failed to test web search tool: WebSearchTool.__init__() takes from 1 to 2 positional arguments but 3 were given
+
+📝 Checking todo generator tool...
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Applying XML schema with tag 'ensure-todo' to function ensure_todo_exists
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Added XML mapping for parameter 'task_description' with type 'content' at path '.', required=True
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Added XML mapping for parameter 'overwrite' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Added xml schema to function ensure_todo_exists
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Applying OpenAPI schema to function ensure_todo_exists
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Added openapi schema to function ensure_todo_exists
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Applying XML schema with tag 'update-todo' to function update_todo
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Added XML mapping for parameter 'completed_tasks' with type 'element' at path 'completed_tasks', required=True
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Added XML mapping for parameter 'new_tasks' with type 'element' at path 'new_tasks', required=True
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Added XML mapping for parameter 'section' with type 'attribute' at path '.', required=True
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Added xml schema to function update_todo
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Applying OpenAPI schema to function update_todo
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Added openapi schema to function update_todo
+  ✅ TodoGeneratorTool module is available
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Initialized new ToolRegistry instance
+  ⏳ Initializing sandbox for todo generator...
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Creating new Daytona sandbox environment
+2025-05-04 02:02:04,181 - agentpress - DEBUG - Configuring sandbox with browser-use image and environment variables
+2025-05-04 02:02:06,234 - agentpress - DEBUG - Sandbox created with ID: ed8a47e1-af0b-4806-a6be-dbf98ca19ece
+2025-05-04 02:02:06,234 - INFO - Creating session supervisord-session for supervisord
+2025-05-04 02:02:06,234 - agentpress - INFO - Creating session supervisord-session for supervisord
+2025-05-04 02:02:06,785 - INFO - Supervisord started in session supervisord-session
+2025-05-04 02:02:06,785 - agentpress - INFO - Supervisord started in session supervisord-session
+2025-05-04 02:02:06,785 - agentpress - DEBUG - Sandbox environment successfully initialized
+  ❌ Failed to test todo generator tool: object Sandbox can't be used in 'await' expression
+Traceback (most recent call last):
+  File "/app/environment_configuration_check.py", line 437, in check_todo_generator
+    sandbox = await create_sandbox(sandbox_id)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: object Sandbox can't be used in 'await' expression
+
+
+================================================================================
+📊 OVERALL CHECK RESULTS
+================================================================================
+environment_variables: ✅ PASSED
+package_dependencies: ❌ FAILED
+database_connection: ❌ FAILED
+redis_connection: ✅ PASSED
+sandbox_setup: ❌ FAILED
+browser_automation: ❌ FAILED
+web_search: ❌ FAILED
+todo_generator: ❌ FAILED
+
+📋 Summary:
+❌ Critical issues found: database_connection, sandbox_setup
+These issues must be fixed for Suna to function properly.
+
+Detailed report saved to: environment_check_620744.json

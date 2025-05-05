@@ -1,0 +1,122 @@
+"""
+Task classifier for determining the appropriate model for a given task.
+"""
+
+import re
+from typing import Dict, Any, Tuple, List
+from utils.logger import logger
+
+# Task types and their corresponding models
+TASK_MODELS = {
+    "coding": "qwen2.5-coder:32b-instruct-q8_0",     # Specialized coding model
+    "reasoning": "mixtral:8x22b-instruct-v0.1-q4_K_M", # Powerful reasoning model
+    "creative": "llama3:8b",                        # Good for creative tasks
+    "general": "qwen2.5:32b-instruct-q4_K_M"         # General purpose model
+}
+
+# Keywords associated with different task types
+TASK_KEYWORDS = {
+    "coding": [
+        "code", "programming", "develop", "script", "function", "class", 
+        "algorithm", "debug", "compile", "syntax", "api", "library",
+        "framework", "python", "javascript", "java", "c++", "typescript",
+        "html", "css", "sql", "database", "git", "github", "docker",
+        "kubernetes", "aws", "azure", "gcp", "cloud", "devops", "cicd",
+        "backend", "frontend", "fullstack", "web", "mobile", "app",
+        "development", "software", "engineer", "developer"
+    ],
+    "reasoning": [
+        "analyze", "evaluate", "compare", "contrast", "explain", "reason",
+        "logic", "argument", "evidence", "conclusion", "premise", "inference",
+        "deduction", "induction", "critical", "thinking", "problem", "solve",
+        "decision", "making", "judgment", "assessment", "evaluation", "review",
+        "critique", "pros", "cons", "advantages", "disadvantages", "benefits",
+        "drawbacks", "implications", "consequences", "impact", "effect", "cause",
+        "relationship", "correlation", "causation", "hypothesis", "theory",
+        "model", "framework", "structure", "system", "process", "method"
+    ],
+    "creative": [
+        "create", "design", "generate", "imagine", "invent", "innovate",
+        "story", "poem", "song", "lyrics", "novel", "fiction", "narrative",
+        "character", "plot", "setting", "theme", "dialogue", "scene", "chapter",
+        "art", "drawing", "painting", "sketch", "illustration", "graphic",
+        "visual", "audio", "music", "sound", "video", "film", "movie", "animation",
+        "creative", "imagination", "fantasy", "dream", "vision", "idea", "concept",
+        "brainstorm", "inspiration", "originality", "unique", "innovative", "fresh"
+    ]
+}
+
+def classify_task(prompt: str) -> Tuple[str, float]:
+    """
+    Classify a task based on the prompt.
+    
+    Args:
+        prompt: The user's prompt
+        
+    Returns:
+        A tuple of (task_type, confidence)
+    """
+    prompt = prompt.lower()
+    
+    # Count keyword matches for each task type
+    scores: Dict[str, int] = {task_type: 0 for task_type in TASK_KEYWORDS}
+    
+    for task_type, keywords in TASK_KEYWORDS.items():
+        for keyword in keywords:
+            # Use word boundary to match whole words
+            pattern = r'\b' + re.escape(keyword) + r'\b'
+            matches = re.findall(pattern, prompt)
+            scores[task_type] += len(matches)
+    
+    # Determine the task type with the highest score
+    max_score = 0
+    task_type = "general"  # Default to general
+    
+    for t_type, score in scores.items():
+        if score > max_score:
+            max_score = score
+            task_type = t_type
+    
+    # Calculate confidence (normalize by prompt length)
+    total_words = len(prompt.split())
+    confidence = min(1.0, max_score / max(1, total_words / 10))
+    
+    logger.debug(f"Task classification: {task_type} (confidence: {confidence:.2f})")
+    logger.debug(f"Scores: {scores}")
+    
+    return task_type, confidence
+
+def get_model_for_task(prompt: str) -> str:
+    """
+    Get the appropriate model for a given task.
+    
+    Args:
+        prompt: The user's prompt
+        
+    Returns:
+        The name of the model to use
+    """
+    task_type, confidence = classify_task(prompt)
+    
+    # Use the task-specific model if confidence is high enough
+    if confidence >= 0.2:
+        return TASK_MODELS[task_type]
+    
+    # Fall back to general model if confidence is low
+    return TASK_MODELS["general"]
+
+def get_available_task_models() -> List[Dict[str, Any]]:
+    """
+    Get a list of available task-specific models.
+    
+    Returns:
+        A list of model information
+    """
+    return [
+        {
+            "task_type": task_type,
+            "model_name": model_name,
+            "description": f"Optimized for {task_type} tasks"
+        }
+        for task_type, model_name in TASK_MODELS.items()
+    ]

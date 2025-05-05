@@ -115,7 +115,6 @@ app.add_middleware(
 app.include_router(agent_api.router, prefix="/api")
 app.include_router(sandbox_api.router, prefix="/api")
 app.include_router(billing_api.router, prefix="/api")
-app.include_router(sandbox_api.router, prefix="/api")
 
 
 # ——— Health check

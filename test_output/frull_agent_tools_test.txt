@@ -1,0 +1,35 @@
+
+================================================================================
+🧪 SETTING UP TEST ENVIRONMENT
+================================================================================
+2025-05-04 02:03:35,132 - utils.config - INFO - Environment mode: local
+Added file handler for: /app/logs/agentpress_20250504.log
+Added console handler with level: 20
+2025-05-04 02:03:35,133 - agentpress - DEBUG - Supabase client not initialized, initializing now
+2025-05-04 02:03:35,133 - agentpress - DEBUG - Initializing Supabase connection
+2025-05-04 02:03:35,169 - agentpress - DEBUG - Database connection initialized with Supabase using SERVICE_ROLE_KEY
+
+🔍 Checking for existing test account...
+2025-05-04 02:03:35,486 - httpx - INFO - HTTP Request: GET https://hrffzolutdfpaplntjkx.supabase.co/rest/v1/accounts?select=account_id&limit=1 "HTTP/2 404 Not Found"
+Traceback (most recent call last):
+  File "/app/full_agent_tools_test.py", line 559, in <module>
+    asyncio.run(run_all_tool_tests()) 
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/app/full_agent_tools_test.py", line 460, in run_all_tool_tests
+    env = await create_test_environment()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/full_agent_tools_test.py", line 73, in create_test_environment
+    accounts = await client.table('accounts').select('account_id').limit(1).execute()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/postgrest/_async/request_builder.py", line 78, in execute
+    raise APIError(r.json())
+postgrest.exceptions.APIError: {'code': '42P01', 'details': None, 'hint': None, 'message': 'relation "public.accounts" does not exist'}

@@ -1,8 +1,11 @@
 import os
 import json
 import re
+import time
 from uuid import uuid4
-from typing import Optional
+from typing import Optional, Dict, Any
+
+from services.agent_logger import log_agent_start, log_agent_stop, log_llm_request, log_tool_usage, log_file_operation
 
 # from agent.tools.message_tool import MessageTool
 from agent.tools.message_tool import MessageTool
@@ -11,6 +14,7 @@ from agent.tools.sb_expose_tool import SandboxExposeTool
 from agent.tools.web_search_tool import WebSearchTool
 from dotenv import load_dotenv
 from utils.config import config
+from services.task_classifier import get_model_for_task
 
 from agentpress.thread_manager import ThreadManager
 from agentpress.response_processor import ProcessorConfig
@@ -23,6 +27,14 @@ from utils import logger
 from utils.auth_utils import get_account_id_from_thread
 from services.billing import check_billing_status
 from agent.tools.sb_vision_tool import SandboxVisionTool
+from agent.tools.pdf_report_tool import PDFReportTool
+from agent.tools.pdf_report_generator import PDFReportGenerator
+from agent.tools.progress_tool import ProgressTool
+from agent.tools.smart_summary_tool import SmartSummaryTool
+from agent.tools.tool_status_tracker import ToolStatusTracker
+from agent.tools.model_management_tools import ListModelsToolWrapper, DownloadModelToolWrapper, SelectModelToolWrapper
+from agent.tools.browser_demo import BrowserDemoToolWrapper
+from agent.tools.todo_generator_tool import TodoGeneratorTool
 
 load_dotenv()
 
@@ -36,9 +48,13 @@ async def run_agent(
     model_name: str = "qwen2.5:32b-instruct-q4_K_M",
     enable_thinking: Optional[bool] = False,
     reasoning_effort: Optional[str] = 'low',
-    enable_context_manager: bool = True
+    enable_context_manager: bool = True,
+    agent_run_id: Optional[str] = None
 ):
     """Run the development agent with specified configuration."""
+    
+    # Record start time for duration calculation
+    start_time = time.time()
     
     thread_manager = ThreadManager()
 
@@ -69,6 +85,22 @@ async def run_agent(
     thread_manager.add_tool(MessageTool) # we are just doing this via prompt as there is no need to call it as a tool
     thread_manager.add_tool(WebSearchTool)
     thread_manager.add_tool(SandboxVisionTool, project_id=project_id, thread_id=thread_id, thread_manager=thread_manager)
+    thread_manager.add_tool(PDFReportTool, project_id=project_id, thread_manager=thread_manager)
+    thread_manager.add_tool(PDFReportGenerator, project_id=project_id, thread_manager=thread_manager)
+    thread_manager.add_tool(ProgressTool)
+    thread_manager.add_tool(SmartSummaryTool)
+    thread_manager.add_tool(ToolStatusTracker)
+    
+    # Register model management tools
+    thread_manager.add_tool(ListModelsToolWrapper)
+    thread_manager.add_tool(DownloadModelToolWrapper)
+    thread_manager.add_tool(SelectModelToolWrapper)
+    
+    # Register browser demo tool
+    thread_manager.add_tool(BrowserDemoToolWrapper)
+    
+    # Register todo generator tool
+    thread_manager.add_tool(TodoGeneratorTool, project_id=project_id, thread_manager=thread_manager)
         
     # Add data providers tool if RapidAPI key is available
     if config.RAPIDAPI_API_KEY:
@@ -101,7 +133,20 @@ async def run_agent(
             if message_type == 'assistant':
                 print(f"Last message was from assistant, stopping execution")
                 continue_execution = False
-                break
+        
+        # Only log agent stop and break if we're done
+        if not continue_execution:
+            if agent_run_id:
+                end_time = time.time()
+                duration_ms = int((end_time - start_time) * 1000)
+                log_agent_stop(
+                    thread_id=thread_id,
+                    agent_run_id=agent_run_id,
+                    project_id=project_id,
+                    status="completed",
+                    duration_ms=duration_ms
+                )
+            break
             
         # ---- Temporary Message Handling (Browser State & Image Context) ----
         temporary_message = None
@@ -172,6 +217,19 @@ async def run_agent(
         # ---- End Temporary Message Handling ----
 
         max_tokens = 64000 if "sonnet" in model_name.lower() else None
+        
+        # Log LLM request
+        if agent_run_id:
+            # Get the last user message to log as prompt
+            latest_user_message = await client.table('messages').select('content').eq('thread_id', thread_id).eq('type', 'user').order('created_at', desc=True).limit(1).execute()
+            prompt = latest_user_message.data[0]['content'] if latest_user_message.data else ""
+            log_llm_request(
+                thread_id=thread_id,
+                model_name=model_name,
+                prompt=prompt,
+                agent_run_id=agent_run_id,
+                project_id=project_id
+            )
 
         response = await thread_manager.run_thread(
             thread_id=thread_id,
@@ -206,7 +264,7 @@ async def run_agent(
         last_tool_call = None
         
         async for chunk in response:
-            # print(f"CHUNK: {chunk}") # Uncomment for detailed chunk logging
+            print(f"CHUNK: {chunk}") # Detailed chunk logging enabled
 
             # Check for XML versions like <ask>, <complete>, or <web-browser-takeover> in assistant content chunks
             if chunk.get('type') == 'assistant' and 'content' in chunk:
@@ -366,53 +424,39 @@ async def run_agent(
     
 #     async for chunk in run_agent(
 #         thread_id=thread_id,
-#         project_id=project_id,
-#         sandbox=sandbox,
-#         stream=stream,
-#         thread_manager=thread_manager,
-#         native_max_auto_continues=25,
-#         model_name=model_name,
-#         enable_thinking=enable_thinking,
-#         reasoning_effort=reasoning_effort,
-#         enable_context_manager=enable_context_manager
-#     ):
-#         chunk_counter += 1
-#         # print(f"CHUNK: {chunk}") # Uncomment for debugging
 
-#         if chunk.get('type') == 'assistant':
-#             # Try parsing the content JSON
-#             try:
-#                 # Handle content as string or object
-#                 content = chunk.get('content', '{}')
-#                 if isinstance(content, str):
-#                     content_json = json.loads(content)
-#                 else:
-#                     content_json = content
+#         try:
+#             # Handle content as string or object
+#             content = chunk.get('content', '{}')
+#             if isinstance(content, str):
+#                 content_json = json.loads(content)
+#             else:
+#                 content_json = content
                 
-#                 actual_content = content_json.get('content', '')
-#                 # Print the actual assistant text content as it comes
-#                 if actual_content:
-#                      # Check if it contains XML tool tags, if so, print the whole tag for context
-#                     if '<' in actual_content and '>' in actual_content:
-#                          # Avoid printing potentially huge raw content if it's not just text
-#                          if len(actual_content) < 500: # Heuristic limit
-#                             print(actual_content, end='', flush=True)
-#                          else:
-#                              # Maybe just print a summary if it's too long or contains complex XML
-#                              if '</ask>' in actual_content: print("<ask>...</ask>", end='', flush=True)
-#                              elif '</complete>' in actual_content: print("<complete>...</complete>", end='', flush=True)
-#                              else: print("<tool_call>...</tool_call>", end='', flush=True) # Generic case
-#                     else:
-#                         # Regular text content
-#                          print(actual_content, end='', flush=True)
+#             actual_content = content_json.get('content', '')
+#             # Print the actual assistant text content as it comes
+#             if actual_content:
+#                  # Check if it contains XML tool tags, if so, print the whole tag for context
+#                 if '<' in actual_content and '>' in actual_content:
+#                      # Avoid printing potentially huge raw content if it's not just text
+#                      if len(actual_content) < 500: # Heuristic limit
+#                         print(actual_content, end='', flush=True)
+#                      else:
+#                          # Maybe just print a summary if it's too long or contains complex XML
+#                          if '</ask>' in actual_content: print("<ask>...</ask>", end='', flush=True)
+#                          elif '</complete>' in actual_content: print("<complete>...</complete>", end='', flush=True)
+#                          else: print("...</>", end='', flush=True) # Generic case
+#                 else:
+#                     # Regular text content
+#                      print(actual_content, end='', flush=True)
 #                     current_response += actual_content # Accumulate only text part
-#             except json.JSONDecodeError:
-#                  # If content is not JSON (e.g., just a string chunk), print directly
-#                  raw_content = chunk.get('content', '')
-#                  print(raw_content, end='', flush=True)
-#                  current_response += raw_content
-#             except Exception as e:
-#                  print(f"\nError processing assistant chunk: {e}\n")
+#         except json.JSONDecodeError:
+#              # If content is not JSON (e.g., just a string chunk), print directly
+#              raw_content = chunk.get('content', '')
+#              print(raw_content, end='', flush=True)
+#              current_response += raw_content
+#         except Exception as e:
+#              print(f"\nError processing assistant chunk: {e}\n")
 
 #         elif chunk.get('type') == 'tool': # Updated from 'tool_result'
 #             # Add timestamp and format tool result nicely
@@ -478,6 +522,16 @@ async def run_agent(
 #                 tool_name = xml_tag_name or function_name # Prefer XML tag name
 
 #                 if status_type == 'tool_started' and tool_name:
+#                     # Log tool start
+#                     if agent_run_id:
+#                         tool_args = status_content.get('args', {})
+#                         log_tool_usage(
+#                             thread_id=thread_id,
+#                             tool_name=tool_name,
+#                             tool_args=tool_args,
+#                             agent_run_id=agent_run_id,
+#                             project_id=project_id
+#                         )
 #                     tool_usage_counter += 1
 #                     print(f"\n⏳ TOOL STARTING #{tool_usage_counter} [{tool_name}]")
 #                     print("  " + "-" * 40)
@@ -485,7 +539,37 @@ async def run_agent(
 #                     if current_response:
 #                         print("\nContinuing response:", flush=True)
 #                         print(current_response, end='', flush=True)
-#                 elif status_type == 'tool_completed' and tool_name:
+#                 elif status_type == 'tool_error' and tool_name:
+#                     # Log tool error
+#                     if agent_run_id:
+#                         tool_args = status_content.get('args', {})
+#                         error = status_content.get('error', None)
+#                         duration_ms = status_content.get('duration_ms', None)
+#                         log_tool_usage(
+#                             thread_id=thread_id,
+#                             tool_name=tool_name,
+#                             tool_args=tool_args,
+#                             agent_run_id=agent_run_id,
+#                             project_id=project_id,
+#                             duration_ms=duration_ms,
+#                             error=str(error)
+#                         )
+#                     print(f"\n🚨 TOOL ERROR [{tool_name}]: {error}")
+#                 elif status_type == 'tool_finished' and tool_name:
+#                     # Log tool completion
+#                     if agent_run_id:
+#                         tool_args = status_content.get('args', {})
+#                         tool_result = status_content.get('result', None)
+#                         duration_ms = status_content.get('duration_ms', None)
+#                         log_tool_usage(
+#                             thread_id=thread_id,
+#                             tool_name=tool_name,
+#                             tool_args=tool_args,
+#                             tool_result=tool_result,
+#                             agent_run_id=agent_run_id,
+#                             project_id=project_id,
+#                             duration_ms=duration_ms
+#                         )
 #                      status_emoji = "✅"
 #                      print(f"\n{status_emoji} TOOL COMPLETED: {tool_name}")
 #                 elif status_type == 'finish':

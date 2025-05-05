@@ -1051,6 +1051,111 @@ export const toggleThreadPublicStatus = async (threadId: string, isPublic: boole
   return updateThread(threadId, { is_public: isPublic });
 };
 
+/**
+ * Delete a thread by ID
+ * @param threadId The ID of the thread to delete
+ * @returns A promise that resolves when the thread is deleted
+ */
+export const deleteThread = async (threadId: string): Promise<void> => {
+  const supabase = createClient();
+  
+  try {
+    // Get the current user's session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Authentication required to delete a thread');
+    }
+    
+    // First, delete all agent runs associated with this thread
+    console.log(`Deleting agent runs for thread ${threadId}...`);
+    const { error: agentRunsError } = await supabase
+      .from('agent_runs')
+      .delete()
+      .eq('thread_id', threadId);
+    
+    if (agentRunsError) {
+      console.error('Error deleting agent runs:', agentRunsError);
+      throw new Error(`Failed to delete agent runs: ${agentRunsError.message}`);
+    }
+    
+    // Next, delete all messages associated with this thread
+    console.log(`Deleting messages for thread ${threadId}...`);
+    const { error: messagesError } = await supabase
+      .from('messages')
+      .delete()
+      .eq('thread_id', threadId);
+    
+    if (messagesError) {
+      console.error('Error deleting messages:', messagesError);
+      throw new Error(`Failed to delete messages: ${messagesError.message}`);
+    }
+    
+    // Finally, delete the thread itself
+    console.log(`Deleting thread ${threadId}...`);
+    const { error: threadError } = await supabase
+      .from('threads')
+      .delete()
+      .eq('thread_id', threadId);
+    
+    if (threadError) {
+      console.error('Error deleting thread:', threadError);
+      throw new Error(`Failed to delete thread: ${threadError.message}`);
+    }
+    
+    console.log(`Thread ${threadId} and all related data deleted successfully`);
+  } catch (err) {
+    console.error('Error in deleteThread:', err);
+    throw err;
+  }
+};
+
+/**
+ * Delete all threads for the current user
+ * @returns A promise that resolves when all threads are deleted
+ */
+export const deleteAllThreads = async (): Promise<void> => {
+  const supabase = createClient();
+  
+  try {
+    // Get the current user's session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Authentication required to delete threads');
+    }
+    
+    const userId = session.user.id;
+    console.log(`Deleting all threads for user ${userId}...`);
+    
+    // Get all threads for the current user
+    const { data: userThreads, error: threadsError } = await supabase
+      .from('threads')
+      .select('thread_id')
+      .eq('account_id', userId);
+    
+    if (threadsError) {
+      console.error('Error fetching threads:', threadsError);
+      throw new Error(`Failed to fetch threads: ${threadsError.message}`);
+    }
+    
+    if (!userThreads || userThreads.length === 0) {
+      console.log('No threads found to delete');
+      return;
+    }
+    
+    console.log(`Found ${userThreads.length} threads to delete`);
+    
+    // Delete each thread one by one
+    for (const thread of userThreads) {
+      await deleteThread(thread.thread_id);
+    }
+    
+    console.log(`Successfully deleted all ${userThreads.length} threads`);
+  } catch (err) {
+    console.error('Error in deleteAllThreads:', err);
+    throw err;
+  }
+};
+
 // Function to get public projects
 export const getPublicProjects = async (): Promise<Project[]> => {
   try {

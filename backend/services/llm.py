@@ -80,6 +80,143 @@ async def handle_error(error: Exception, attempt: int, max_attempts: int) -> Non
     logger.debug(f"Waiting {delay} seconds before retry...")
     await asyncio.sleep(delay)
 
+def enhance_prompt_for_task(messages: List[Dict[str, Any]], task_type: str) -> List[Dict[str, Any]]:
+    """
+    Enhance the prompt with task-specific instructions to improve model performance.
+    
+    Args:
+        messages: The original message list
+        task_type: Type of task (coding, creative, reasoning, chat, etc.)
+        
+    Returns:
+        Enhanced message list
+    """
+    # Don't modify if no messages or task type is unknown
+    if not messages or task_type not in ["coding", "reasoning", "creative", "chat"]:
+        return messages
+    
+    # Create a copy to avoid modifying the original
+    enhanced_messages = messages.copy()
+    
+    # Task-specific system instructions
+    task_instructions = {
+        "coding": (
+            "You are an expert programmer. Provide clean, efficient, and well-documented code. "
+            "Focus on best practices, security, and performance. Include error handling "
+            "and explain your implementation choices. Be precise and thorough."
+        ),
+        "reasoning": (
+            "You are a logical reasoning expert. Break down complex problems step by step. "
+            "Consider multiple perspectives, identify assumptions, and evaluate evidence critically. "
+            "Be thorough in your analysis and explain your reasoning clearly."
+        ),
+        "creative": (
+            "You are a creative assistant. Think outside the box and generate novel ideas. "
+            "Use vivid language, metaphors, and storytelling techniques. "
+            "Don't be constrained by conventional thinking."
+        ),
+        "chat": (
+            "You are a helpful, friendly assistant. Provide concise, accurate information. "
+            "Be conversational but efficient. Anticipate follow-up questions and provide "
+            "relevant context when appropriate."
+        )
+    }
+    
+    # Find and modify system message if it exists
+    system_msg_index = None
+    for i, msg in enumerate(enhanced_messages):
+        if msg.get("role") == "system":
+            system_msg_index = i
+            break
+    
+    if system_msg_index is not None:
+        # Append to existing system message
+        current_content = enhanced_messages[system_msg_index].get("content", "")
+        if not current_content.endswith("."):
+            current_content += ". "
+        else:
+            current_content += " "
+        enhanced_messages[system_msg_index]["content"] = current_content + task_instructions[task_type]
+    else:
+        # Insert new system message at the beginning
+        enhanced_messages.insert(0, {
+            "role": "system",
+            "content": task_instructions[task_type]
+        })
+    
+    logger.debug(f"Enhanced prompt with {task_type}-specific instructions")
+    return enhanced_messages
+
+def optimize_temperature(task_type: str, user_temperature: float) -> float:
+    """
+    Optimize temperature setting based on task type if user hasn't specified a custom value.
+    
+    Args:
+        task_type: Type of task (coding, creative, reasoning, chat, etc.)
+        user_temperature: User-specified temperature (if any)
+        
+    Returns:
+        Optimized temperature value
+    """
+    # If user specified a non-default temperature, respect their choice
+    if user_temperature != 0:
+        return user_temperature
+        
+    # Recommended temperatures for different tasks
+    task_temperatures = {
+        "coding": 0.1,       # Low temperature for precise code generation
+        "reasoning": 0.2,    # Slightly higher for logical reasoning
+        "creative": 0.8,     # High temperature for creative tasks
+        "chat": 0.5,         # Moderate temperature for conversational responses
+    }
+    
+    return task_temperatures.get(task_type, 0.0)  # Default to 0 if task type unknown
+
+def select_best_model_for_task(task_type: str, messages: List[Dict[str, Any]]) -> str:
+    """
+    Select the best model for a specific task type based on available models.
+    
+    Args:
+        task_type: Type of task (coding, creative, reasoning, chat, etc.)
+        messages: The messages to analyze for context
+    
+    Returns:
+        The name of the most appropriate model for the task
+    """
+    # Default to the configured model
+    default_model = config.MODEL_TO_USE
+    
+    # Check if we have specialized models available on Ollama
+    available_models = {
+        "coding": "qwen2.5-coder:32b-instruct-q8_0",  # Better for code generation
+        "reasoning": "mixtral:8x22b-instruct-v0.1-q4_K_M",  # Better for complex reasoning
+        "creative": "llama3.1:8b",  # Good for creative tasks with lower latency
+        "chat": "qwen2.5:32b-instruct-q4_K_M",  # Good all-around model for chat
+    }
+    
+    # Check message content to detect code-related queries
+    if task_type == "auto":
+        # Analyze the last user message to determine task type
+        if len(messages) > 0:
+            last_user_msg = ""
+            for msg in reversed(messages):
+                if msg.get("role") == "user":
+                    last_user_msg = msg.get("content", "")
+                    break
+            
+            # Simple heuristics to determine task type
+            if any(kw in last_user_msg.lower() for kw in ["code", "function", "programming", "script", "algorithm", "debug"]):
+                task_type = "coding"
+            elif any(kw in last_user_msg.lower() for kw in ["explain", "why", "how", "analyze", "compare", "evaluate"]):
+                task_type = "reasoning"
+            elif any(kw in last_user_msg.lower() for kw in ["story", "creative", "imagine", "design", "generate"]):
+                task_type = "creative"
+            else:
+                task_type = "chat"
+    
+    # Return the appropriate model or fall back to default
+    return available_models.get(task_type, default_model)
+
 def prepare_params(
     messages: List[Dict[str, Any]],
     model_name: str,
@@ -94,9 +231,46 @@ def prepare_params(
     top_p: Optional[float] = None,
     model_id: Optional[str] = None,
     enable_thinking: Optional[bool] = False,
-    reasoning_effort: Optional[str] = 'low'
+    reasoning_effort: Optional[str] = 'low',
+    task_type: str = "auto"
 ) -> Dict[str, Any]:
     """Prepare parameters for the API call."""
+    # If task_type is set to auto or a specific type, use model selection logic
+    if task_type and model_name == config.MODEL_TO_USE:
+        suggested_model = select_best_model_for_task(task_type, messages)
+        if suggested_model != model_name:
+            logger.debug(f"Task type '{task_type}' detected, switching from {model_name} to {suggested_model}")
+            model_name = suggested_model
+    
+    # Optimize temperature based on task type if not explicitly set by user
+    optimized_temperature = optimize_temperature(task_type, temperature)
+    if optimized_temperature != temperature:
+        logger.debug(f"Optimizing temperature for task type '{task_type}': {temperature} → {optimized_temperature}")
+        temperature = optimized_temperature
+        
+    # Enhance prompts with task-specific instructions
+    if task_type != "auto":
+        enhanced_messages = enhance_prompt_for_task(messages, task_type)
+        if enhanced_messages != messages:
+            logger.debug(f"Enhanced prompt with {task_type}-specific instructions")
+            messages = enhanced_messages
+    
+    # Ensure model_name includes a provider prefix for LiteLLM
+    if '/' not in model_name:
+        if config.OPENAI_API_KEY:
+            provider = 'openai'
+        elif config.ANTHROPIC_API_KEY:
+            provider = 'anthropic'
+        elif config.GROQ_API_KEY:
+            provider = 'groq'
+        elif config.OPENROUTER_API_KEY:
+            provider = 'openrouter'
+        else:
+            provider = None
+        if provider:
+            logger.debug(f"Prefixing model_name with default provider '{provider}'")
+            model_name = f"{provider}/{model_name}"
+    
     params = {
         "model": model_name,
         "messages": messages,
@@ -133,14 +307,37 @@ def prepare_params(
         logger.debug(f"Added {len(tools)} tools to API parameters")
 
     # Add Ollama-specific configuration
+    # Check if this is an Ollama model by looking at model name or config
+    is_ollama_model = False
+    
+    # Check if model name contains Ollama-specific identifiers (qwen, mixtral, llama)
+    if any(identifier in model_name.lower() for identifier in ['qwen', 'mixtral', 'llama']):
+        is_ollama_model = True
+        logger.debug(f"Detected Ollama model based on name: {model_name}")
+    
+    # Also check explicit configuration
     if hasattr(config, 'OLLAMA_PROVIDER') and config.OLLAMA_PROVIDER and config.OLLAMA_PROVIDER.lower() == 'ollama':
-        # Only add ollama/ prefix if it's not already there
-        if not model_name.startswith('ollama/'):
-            params["model"] = f"ollama/{model_name}"
+        is_ollama_model = True
+        logger.debug(f"Using Ollama provider based on configuration")
+    
+    if is_ollama_model:
+        # Always ensure we have the ollama/ prefix for Ollama models
+        # First, strip any existing provider prefix (like 'openai/')
+        if '/' in model_name:
+            _, model_name = model_name.split('/', 1)
+        
+        # Set the model with ollama/ prefix
+        params["model"] = f"ollama/{model_name}"
+        
         # Set API base if available
         if hasattr(config, 'OLLAMA_API_BASE') and config.OLLAMA_API_BASE:
             params["api_base"] = config.OLLAMA_API_BASE
-        logger.debug(f"Using Ollama provider for model: {params['model']} with API base: {params.get('api_base', 'default')}")  
+        
+        logger.debug(f"Using Ollama provider for model: {params['model']} with API base: {params.get('api_base', 'default')}")
+        
+        # For Ollama models, ensure we have the correct provider specified
+        params["provider"] = "ollama"
+        logger.debug(f"Set explicit provider='ollama' for model {model_name}")
 
     # Add Claude-specific headers
     elif "claude" in model_name.lower() or "anthropic" in model_name.lower():
@@ -270,7 +467,8 @@ async def make_llm_api_call(
     top_p: Optional[float] = None,
     model_id: Optional[str] = None,
     enable_thinking: Optional[bool] = False,
-    reasoning_effort: Optional[str] = 'low'
+    reasoning_effort: Optional[str] = 'low',
+    task_type: str = "auto"
 ) -> Union[Dict[str, Any], AsyncGenerator]:
     """
     Make an API call to a language model using LiteLLM.
@@ -290,6 +488,7 @@ async def make_llm_api_call(
         model_id: Optional ARN for Bedrock inference profiles
         enable_thinking: Whether to enable thinking
         reasoning_effort: Level of reasoning effort
+        task_type: Type of task ("coding", "reasoning", "creative", "chat", or "auto" for automatic detection)
         
     Returns:
         Union[Dict[str, Any], AsyncGenerator]: API response or stream
@@ -314,7 +513,8 @@ async def make_llm_api_call(
         top_p=top_p,
         model_id=model_id,
         enable_thinking=enable_thinking,
-        reasoning_effort=reasoning_effort
+        reasoning_effort=reasoning_effort,
+        task_type=task_type
     )
     last_error = None
     for attempt in range(MAX_RETRIES):
@@ -330,6 +530,18 @@ async def make_llm_api_call(
         except (litellm.exceptions.RateLimitError, OpenAIError, json.JSONDecodeError) as e:
             last_error = e
             await handle_error(e, attempt, MAX_RETRIES)
+        except getattr(litellm.exceptions, 'BadRequestError', Exception) as e:
+            # Handle missing LLM provider error by retrying with appropriate prefix
+            if 'LLM Provider NOT provided' in str(e):
+                # Check if it's an Ollama model
+                if config.OLLAMA_PROVIDER and config.OLLAMA_PROVIDER.lower() == 'ollama':
+                    logger.warning("LLM Provider missing, retrying with 'ollama/' prefix")
+                    params['model'] = f"ollama/{params['model']}"
+                else:
+                    logger.warning("LLM Provider missing, retrying with 'openai/' prefix")
+                    params['model'] = f"openai/{params['model']}"
+                continue
+            raise LLMError(f"API call failed: {str(e)}")
             
         except Exception as e:
             logger.error(f"Unexpected error during API call: {str(e)}", exc_info=True)
@@ -340,6 +552,105 @@ async def make_llm_api_call(
         error_msg += f". Last error: {str(last_error)}"
     logger.error(error_msg, exc_info=True)
     raise LLMRetryError(error_msg)
+
+# Functions for Ollama model management
+async def list_ollama_models() -> Dict[str, Any]:
+    """
+    List all available models on the Ollama server.
+    
+    Returns:
+        Dict containing the list of available models and their details
+    
+    Raises:
+        LLMError: If there's an error communicating with the Ollama server
+    """
+    import aiohttp
+    
+    if not config.OLLAMA_API_BASE:
+        raise LLMError("Ollama API base URL not configured")
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{config.OLLAMA_API_BASE}/api/tags") as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise LLMError(f"Failed to list Ollama models: {error_text}")
+                
+                result = await response.json()
+                return result
+    except Exception as e:
+        logger.error(f"Error listing Ollama models: {str(e)}")
+        raise LLMError(f"Failed to communicate with Ollama server: {str(e)}")
+
+async def download_ollama_model(model_name: str) -> AsyncGenerator[Dict[str, Any], None]:
+    """
+    Download a model to the Ollama server.
+    
+    Args:
+        model_name: Name of the model to download (e.g., "llama3:8b")
+    
+    Yields:
+        Dict containing progress updates during the download
+    
+    Raises:
+        LLMError: If there's an error downloading the model
+    """
+    import aiohttp
+    import json
+    
+    if not config.OLLAMA_API_BASE:
+        raise LLMError("Ollama API base URL not configured")
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{config.OLLAMA_API_BASE}/api/pull",
+                json={"name": model_name},
+                timeout=None  # No timeout for long downloads
+            ) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise LLMError(f"Failed to download model {model_name}: {error_text}")
+                
+                # Stream the response as it comes in
+                async for line in response.content:
+                    if line:
+                        try:
+                            progress = json.loads(line)
+                            yield progress
+                        except json.JSONDecodeError:
+                            logger.warning(f"Received invalid JSON from Ollama: {line}")
+                            continue
+    except Exception as e:
+        logger.error(f"Error downloading Ollama model {model_name}: {str(e)}")
+        raise LLMError(f"Failed to download model {model_name}: {str(e)}")
+
+async def select_ollama_model(model_name: str) -> bool:
+    """
+    Select an Ollama model as the default model to use.
+    
+    Args:
+        model_name: Name of the model to set as default
+    
+    Returns:
+        True if the model was successfully selected, False otherwise
+    """
+    # Check if the model exists on the Ollama server
+    try:
+        models = await list_ollama_models()
+        available_models = [model["name"] for model in models.get("models", [])]
+        
+        if model_name not in available_models:
+            logger.warning(f"Model {model_name} not found on Ollama server")
+            return False
+        
+        # Update the configuration
+        config.MODEL_TO_USE = model_name
+        logger.info(f"Selected model: {model_name}")
+        return True
+    except Exception as e:
+        logger.error(f"Error selecting Ollama model: {str(e)}")
+        return False
 
 # Initialize API keys on module import
 setup_api_keys()

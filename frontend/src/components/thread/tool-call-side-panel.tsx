@@ -9,6 +9,7 @@ import { CircleDashed, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
+import { TodoListPanel } from "./todo-list-panel";
 
 // Import tool view components from the tool-views directory
 import { CommandToolView } from "./tool-views/CommandToolView";
@@ -21,6 +22,7 @@ import { WebCrawlToolView } from "./tool-views/WebCrawlToolView";
 import { WebScrapeToolView } from "./tool-views/WebScrapeToolView";
 import { DataProviderToolView } from "./tool-views/DataProviderToolView";
 import { ExposePortToolView } from "./tool-views/ExposePortToolView";
+import { TodoListView } from "./tool-views/TodoListView";
 
 // Simple input interface
 export interface ToolCallInput {
@@ -86,6 +88,20 @@ function getToolView(
           toolTimestamp={toolTimestamp}
           isSuccess={isSuccess}
           isStreaming={isStreaming}
+        />
+      );
+    case 'ensure-todo':
+    case 'update-todo':
+      return (
+        <TodoListView
+          assistantContent={assistantContent}
+          toolContent={toolContent}
+          assistantTimestamp={assistantTimestamp}
+          toolTimestamp={toolTimestamp}
+          isSuccess={isSuccess}
+          isStreaming={isStreaming}
+          name={normalizedToolName}
+          project={project}
         />
       );
     case 'create-file':

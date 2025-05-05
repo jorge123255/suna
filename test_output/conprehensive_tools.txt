@@ -1,0 +1,319 @@
+
+
+################################################################################
+RUNNING TEST CASE: Todo List Test
+################################################################################
+
+================================================================================
+🧪 RUNNING TEST CASE: Todo List Test
+================================================================================
+Prompt: Create a todo list for building a simple web app
+Expected Tools: update_todo, ensure_todo_exists
+--------------------------------------------------------------------------------
+2025-05-04 02:04:25,125 - utils.config - INFO - Environment mode: local
+Added file handler for: /app/logs/agentpress_20250504.log
+Added console handler with level: 20
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Applying XML schema with tag 'ask' to function ask
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Added XML mapping for parameter 'text' with type 'content' at path '.', required=True
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Added XML mapping for parameter 'attachments' with type 'attribute' at path '.', required=False
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Added xml schema to function ask
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Applying OpenAPI schema to function ask
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Added openapi schema to function ask
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Applying XML schema with tag 'web-browser-takeover' to function web_browser_takeover
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Added XML mapping for parameter 'text' with type 'content' at path '.', required=True
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Added XML mapping for parameter 'attachments' with type 'attribute' at path '.', required=False
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Added xml schema to function web_browser_takeover
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Applying OpenAPI schema to function web_browser_takeover
+2025-05-04 02:04:25,127 - agentpress - DEBUG - Added openapi schema to function web_browser_takeover
+2025-05-04 02:04:25,128 - agentpress - DEBUG - Applying XML schema with tag 'complete' to function complete
+2025-05-04 02:04:25,128 - agentpress - DEBUG - Added xml schema to function complete
+2025-05-04 02:04:25,128 - agentpress - DEBUG - Applying OpenAPI schema to function complete
+2025-05-04 02:04:25,128 - agentpress - DEBUG - Added openapi schema to function complete
+2025-05-04 02:04:26,033 - httpx - INFO - HTTP Request: GET https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json "HTTP/1.1 200 OK"
+2025-05-04 02:04:26,403 - agentpress - DEBUG - API key set for provider: OPENAI
+2025-05-04 02:04:26,403 - agentpress - DEBUG - API key set for provider: ANTHROPIC
+2025-05-04 02:04:26,403 - WARNING - No API key found for provider: GROQ
+2025-05-04 02:04:26,403 - agentpress - WARNING - No API key found for provider: GROQ
+2025-05-04 02:04:26,403 - WARNING - No API key found for provider: OPENROUTER
+2025-05-04 02:04:26,403 - agentpress - WARNING - No API key found for provider: OPENROUTER
+2025-05-04 02:04:26,403 - agentpress - DEBUG - Set OLLAMA_API_BASE to http://192.168.1.10:11434
+2025-05-04 02:04:26,403 - agentpress - DEBUG - Using Ollama provider: ollama
+2025-05-04 02:04:26,403 - WARNING - Missing AWS credentials for Bedrock integration - access_key: False, secret_key: False, region: None
+2025-05-04 02:04:26,403 - agentpress - WARNING - Missing AWS credentials for Bedrock integration - access_key: False, secret_key: False, region: None
+2025-05-04 02:04:26,413 - agentpress - DEBUG - Initializing Daytona sandbox configuration
+2025-05-04 02:04:26,413 - agentpress - DEBUG - Daytona API key configured successfully
+2025-05-04 02:04:26,413 - agentpress - DEBUG - Daytona server URL set to: https://app.daytona.io/api
+2025-05-04 02:04:26,413 - agentpress - DEBUG - Daytona target set to: us
+2025-05-04 02:04:26,413 - agentpress - DEBUG - Daytona client initialized
+2025-05-04 02:04:26,414 - agentpress - DEBUG - Applying XML schema with tag 'deploy' to function deploy
+2025-05-04 02:04:26,414 - agentpress - DEBUG - Added XML mapping for parameter 'name' with type 'attribute' at path 'name', required=True
+2025-05-04 02:04:26,414 - agentpress - DEBUG - Added XML mapping for parameter 'directory_path' with type 'attribute' at path 'directory_path', required=True
+2025-05-04 02:04:26,414 - agentpress - DEBUG - Added xml schema to function deploy
+2025-05-04 02:04:26,414 - agentpress - DEBUG - Applying OpenAPI schema to function deploy
+2025-05-04 02:04:26,414 - agentpress - DEBUG - Added openapi schema to function deploy
+2025-05-04 02:04:26,415 - agentpress - DEBUG - Applying XML schema with tag 'expose-port' to function expose_port
+2025-05-04 02:04:26,415 - agentpress - DEBUG - Added XML mapping for parameter 'port' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,415 - agentpress - DEBUG - Added xml schema to function expose_port
+2025-05-04 02:04:26,415 - agentpress - DEBUG - Applying OpenAPI schema to function expose_port
+2025-05-04 02:04:26,415 - agentpress - DEBUG - Added openapi schema to function expose_port
+2025-05-04 02:04:26,439 - agentpress - DEBUG - Applying XML schema with tag 'web-search' to function web_search
+2025-05-04 02:04:26,439 - agentpress - DEBUG - Added XML mapping for parameter 'query' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,440 - agentpress - DEBUG - Added XML mapping for parameter 'num_results' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,440 - agentpress - DEBUG - Added xml schema to function web_search
+2025-05-04 02:04:26,440 - agentpress - DEBUG - Applying OpenAPI schema to function web_search
+2025-05-04 02:04:26,440 - agentpress - DEBUG - Added openapi schema to function web_search
+2025-05-04 02:04:26,440 - agentpress - DEBUG - Applying XML schema with tag 'scrape-webpage' to function scrape_webpage
+2025-05-04 02:04:26,440 - agentpress - DEBUG - Added XML mapping for parameter 'url' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,440 - agentpress - DEBUG - Added xml schema to function scrape_webpage
+2025-05-04 02:04:26,440 - agentpress - DEBUG - Applying OpenAPI schema to function scrape_webpage
+2025-05-04 02:04:26,440 - agentpress - DEBUG - Added openapi schema to function scrape_webpage
+2025-05-04 02:04:26,441 - agentpress - DEBUG - Applying XML schema with tag 'execute-command' to function execute_command
+2025-05-04 02:04:26,441 - agentpress - DEBUG - Added XML mapping for parameter 'command' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,441 - agentpress - DEBUG - Added XML mapping for parameter 'folder' with type 'attribute' at path '.', required=False
+2025-05-04 02:04:26,441 - agentpress - DEBUG - Added XML mapping for parameter 'session_name' with type 'attribute' at path '.', required=False
+2025-05-04 02:04:26,441 - agentpress - DEBUG - Added XML mapping for parameter 'timeout' with type 'attribute' at path '.', required=False
+2025-05-04 02:04:26,441 - agentpress - DEBUG - Added xml schema to function execute_command
+2025-05-04 02:04:26,441 - agentpress - DEBUG - Applying OpenAPI schema to function execute_command
+2025-05-04 02:04:26,441 - agentpress - DEBUG - Added openapi schema to function execute_command
+2025-05-04 02:04:26,442 - agentpress - DEBUG - Applying XML schema with tag 'create-file' to function create_file
+2025-05-04 02:04:26,442 - agentpress - DEBUG - Added XML mapping for parameter 'file_path' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,442 - agentpress - DEBUG - Added XML mapping for parameter 'file_contents' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,442 - agentpress - DEBUG - Added xml schema to function create_file
+2025-05-04 02:04:26,442 - agentpress - DEBUG - Applying OpenAPI schema to function create_file
+2025-05-04 02:04:26,442 - agentpress - DEBUG - Added openapi schema to function create_file
+2025-05-04 02:04:26,442 - agentpress - DEBUG - Applying XML schema with tag 'str-replace' to function str_replace
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added XML mapping for parameter 'file_path' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added XML mapping for parameter 'old_str' with type 'element' at path 'old_str', required=True
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added XML mapping for parameter 'new_str' with type 'element' at path 'new_str', required=True
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added xml schema to function str_replace
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Applying OpenAPI schema to function str_replace
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added openapi schema to function str_replace
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Applying XML schema with tag 'full-file-rewrite' to function full_file_rewrite
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added XML mapping for parameter 'file_path' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added XML mapping for parameter 'file_contents' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added xml schema to function full_file_rewrite
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Applying OpenAPI schema to function full_file_rewrite
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added openapi schema to function full_file_rewrite
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Applying XML schema with tag 'delete-file' to function delete_file
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added XML mapping for parameter 'file_path' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added xml schema to function delete_file
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Applying OpenAPI schema to function delete_file
+2025-05-04 02:04:26,443 - agentpress - DEBUG - Added openapi schema to function delete_file
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying XML schema with tag 'browser-navigate-to' to function browser_navigate_to
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added XML mapping for parameter 'url' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added xml schema to function browser_navigate_to
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying OpenAPI schema to function browser_navigate_to
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added openapi schema to function browser_navigate_to
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying XML schema with tag 'browser-go-back' to function browser_go_back
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added xml schema to function browser_go_back
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying OpenAPI schema to function browser_go_back
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added openapi schema to function browser_go_back
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying XML schema with tag 'browser-wait' to function browser_wait
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added XML mapping for parameter 'seconds' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added xml schema to function browser_wait
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying OpenAPI schema to function browser_wait
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added openapi schema to function browser_wait
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying XML schema with tag 'browser-click-element' to function browser_click_element
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added XML mapping for parameter 'index' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added xml schema to function browser_click_element
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying OpenAPI schema to function browser_click_element
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added openapi schema to function browser_click_element
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying XML schema with tag 'browser-input-text' to function browser_input_text
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added XML mapping for parameter 'index' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added XML mapping for parameter 'text' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added xml schema to function browser_input_text
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying OpenAPI schema to function browser_input_text
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added openapi schema to function browser_input_text
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Applying XML schema with tag 'browser-send-keys' to function browser_send_keys
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added XML mapping for parameter 'keys' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,445 - agentpress - DEBUG - Added xml schema to function browser_send_keys
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying OpenAPI schema to function browser_send_keys
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added openapi schema to function browser_send_keys
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying XML schema with tag 'browser-switch-tab' to function browser_switch_tab
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added XML mapping for parameter 'page_id' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added xml schema to function browser_switch_tab
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying OpenAPI schema to function browser_switch_tab
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added openapi schema to function browser_switch_tab
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying XML schema with tag 'browser-close-tab' to function browser_close_tab
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added XML mapping for parameter 'page_id' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added xml schema to function browser_close_tab
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying OpenAPI schema to function browser_close_tab
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added openapi schema to function browser_close_tab
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying XML schema with tag 'browser-scroll-down' to function browser_scroll_down
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added XML mapping for parameter 'amount' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added xml schema to function browser_scroll_down
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying OpenAPI schema to function browser_scroll_down
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added openapi schema to function browser_scroll_down
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying XML schema with tag 'browser-scroll-up' to function browser_scroll_up
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added XML mapping for parameter 'amount' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added xml schema to function browser_scroll_up
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying OpenAPI schema to function browser_scroll_up
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added openapi schema to function browser_scroll_up
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying XML schema with tag 'browser-scroll-to-text' to function browser_scroll_to_text
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added XML mapping for parameter 'text' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added xml schema to function browser_scroll_to_text
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying OpenAPI schema to function browser_scroll_to_text
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added openapi schema to function browser_scroll_to_text
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying XML schema with tag 'browser-get-dropdown-options' to function browser_get_dropdown_options
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added XML mapping for parameter 'index' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added xml schema to function browser_get_dropdown_options
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying OpenAPI schema to function browser_get_dropdown_options
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added openapi schema to function browser_get_dropdown_options
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Applying XML schema with tag 'browser-select-dropdown-option' to function browser_select_dropdown_option
+2025-05-04 02:04:26,446 - agentpress - DEBUG - Added XML mapping for parameter 'index' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added XML mapping for parameter 'text' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added xml schema to function browser_select_dropdown_option
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Applying OpenAPI schema to function browser_select_dropdown_option
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added openapi schema to function browser_select_dropdown_option
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Applying XML schema with tag 'browser-drag-drop' to function browser_drag_drop
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added XML mapping for parameter 'element_source' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added XML mapping for parameter 'element_target' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added XML mapping for parameter 'coord_source_x' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added XML mapping for parameter 'coord_source_y' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added XML mapping for parameter 'coord_target_x' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added XML mapping for parameter 'coord_target_y' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added xml schema to function browser_drag_drop
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Applying OpenAPI schema to function browser_drag_drop
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added openapi schema to function browser_drag_drop
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Applying XML schema with tag 'browser-click-coordinates' to function browser_click_coordinates
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added XML mapping for parameter 'x' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added XML mapping for parameter 'y' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added xml schema to function browser_click_coordinates
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Applying OpenAPI schema to function browser_click_coordinates
+2025-05-04 02:04:26,447 - agentpress - DEBUG - Added openapi schema to function browser_click_coordinates
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Applying XML schema with tag 'get-data-provider-endpoints' to function get_data_provider_endpoints
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Added XML mapping for parameter 'service_name' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Added xml schema to function get_data_provider_endpoints
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Applying OpenAPI schema to function get_data_provider_endpoints
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Added openapi schema to function get_data_provider_endpoints
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Applying XML schema with tag 'execute-data-provider-call' to function execute_data_provider_call
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Added XML mapping for parameter 'service_name' with type 'attribute' at path 'service_name', required=True
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Added XML mapping for parameter 'route' with type 'attribute' at path 'route', required=True
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Added XML mapping for parameter 'payload' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Added xml schema to function execute_data_provider_call
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Applying OpenAPI schema to function execute_data_provider_call
+2025-05-04 02:04:26,450 - agentpress - DEBUG - Added openapi schema to function execute_data_provider_call
+2025-05-04 02:04:26,828 - agentpress - DEBUG - Applying XML schema with tag 'see-image' to function see_image
+2025-05-04 02:04:26,829 - agentpress - DEBUG - Added XML mapping for parameter 'file_path' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,829 - agentpress - DEBUG - Added xml schema to function see_image
+2025-05-04 02:04:26,829 - agentpress - DEBUG - Applying OpenAPI schema to function see_image
+2025-05-04 02:04:26,829 - agentpress - DEBUG - Added openapi schema to function see_image
+2025-05-04 02:04:26,952 - agentpress - DEBUG - Applying XML schema with tag 'generate-pdf' to function generate_pdf
+2025-05-04 02:04:26,952 - agentpress - DEBUG - Added XML mapping for parameter 'filename' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,952 - agentpress - DEBUG - Added XML mapping for parameter 'content' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,952 - agentpress - DEBUG - Added xml schema to function generate_pdf
+2025-05-04 02:04:26,952 - agentpress - DEBUG - Applying OpenAPI schema to function generate_pdf
+2025-05-04 02:04:26,952 - agentpress - DEBUG - Added openapi schema to function generate_pdf
+2025-05-04 02:04:26,953 - agentpress - DEBUG - Applying XML schema with tag 'generate-pdf-report' to function generate_pdf_report
+2025-05-04 02:04:26,953 - agentpress - DEBUG - Added XML mapping for parameter 'title' with type 'element' at path 'title', required=True
+2025-05-04 02:04:26,953 - agentpress - DEBUG - Added XML mapping for parameter 'content' with type 'element' at path 'content', required=True
+2025-05-04 02:04:26,953 - agentpress - DEBUG - Added xml schema to function generate_pdf_report
+2025-05-04 02:04:26,953 - agentpress - DEBUG - Applying OpenAPI schema to function generate_pdf_report
+2025-05-04 02:04:26,953 - agentpress - DEBUG - Added openapi schema to function generate_pdf_report
+2025-05-04 02:04:26,954 - agentpress - DEBUG - Applying XML schema with tag 'update-progress' to function update_progress
+2025-05-04 02:04:26,954 - agentpress - DEBUG - Added XML mapping for parameter 'current_step' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,954 - agentpress - DEBUG - Added XML mapping for parameter 'total_steps' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,954 - agentpress - DEBUG - Added XML mapping for parameter 'step_description' with type 'element' at path 'step_description', required=True
+2025-05-04 02:04:26,954 - agentpress - DEBUG - Added XML mapping for parameter 'completed_steps' with type 'element' at path 'completed_steps/step', required=True
+2025-05-04 02:04:26,954 - agentpress - DEBUG - Added XML mapping for parameter 'next_steps' with type 'element' at path 'next_steps/step', required=True
+2025-05-04 02:04:26,954 - agentpress - DEBUG - Added xml schema to function update_progress
+2025-05-04 02:04:26,954 - agentpress - DEBUG - Applying OpenAPI schema to function update_progress
+2025-05-04 02:04:26,954 - agentpress - DEBUG - Added openapi schema to function update_progress
+2025-05-04 02:04:26,954 - agentpress - DEBUG - Applying XML schema with tag 'smart-summary' to function smart_summary
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added XML mapping for parameter 'topic' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added XML mapping for parameter 'format' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added XML mapping for parameter 'max_length' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added XML mapping for parameter 'raw_data' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added xml schema to function smart_summary
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Applying OpenAPI schema to function smart_summary
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added openapi schema to function smart_summary
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Applying XML schema with tag 'tool-status' to function tool_status
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added XML mapping for parameter 'status' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added XML mapping for parameter 'tool_name' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added XML mapping for parameter 'details' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added xml schema to function tool_status
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Applying OpenAPI schema to function tool_status
+2025-05-04 02:04:26,955 - agentpress - DEBUG - Added openapi schema to function tool_status
+2025-05-04 02:04:26,957 - agentpress - DEBUG - Applying XML schema with tag 'ensure-todo' to function ensure_todo_exists
+2025-05-04 02:04:26,957 - agentpress - DEBUG - Added XML mapping for parameter 'task_description' with type 'content' at path '.', required=True
+2025-05-04 02:04:26,957 - agentpress - DEBUG - Added XML mapping for parameter 'overwrite' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,957 - agentpress - DEBUG - Added xml schema to function ensure_todo_exists
+2025-05-04 02:04:26,957 - agentpress - DEBUG - Applying OpenAPI schema to function ensure_todo_exists
+2025-05-04 02:04:26,957 - agentpress - DEBUG - Added openapi schema to function ensure_todo_exists
+2025-05-04 02:04:26,957 - agentpress - DEBUG - Applying XML schema with tag 'update-todo' to function update_todo
+2025-05-04 02:04:26,957 - agentpress - DEBUG - Added XML mapping for parameter 'completed_tasks' with type 'element' at path 'completed_tasks', required=True
+2025-05-04 02:04:26,957 - agentpress - DEBUG - Added XML mapping for parameter 'new_tasks' with type 'element' at path 'new_tasks', required=True
+2025-05-04 02:04:26,957 - agentpress - DEBUG - Added XML mapping for parameter 'section' with type 'attribute' at path '.', required=True
+2025-05-04 02:04:26,958 - agentpress - DEBUG - Added xml schema to function update_todo
+2025-05-04 02:04:26,958 - agentpress - DEBUG - Applying OpenAPI schema to function update_todo
+2025-05-04 02:04:26,958 - agentpress - DEBUG - Added openapi schema to function update_todo
+2025-05-04 02:04:26,959 - agentpress - DEBUG - Supabase client not initialized, initializing now
+2025-05-04 02:04:26,959 - agentpress - DEBUG - Initializing Supabase connection
+2025-05-04 02:04:26,971 - agentpress - DEBUG - Database connection initialized with Supabase using SERVICE_ROLE_KEY
+
+🔍 Checking for existing test account...
+2025-05-04 02:04:27,194 - httpx - INFO - HTTP Request: GET https://hrffzolutdfpaplntjkx.supabase.co/rest/v1/accounts?select=account_id&limit=1 "HTTP/2 404 Not Found"
+❌ Error running test case: {'code': '42P01', 'details': None, 'hint': None, 'message': 'relation "public.accounts" does not exist'}
+Traceback (most recent call last):
+  File "/app/comprehensive_tool_test.py", line 172, in run_test_case
+    accounts = await client.table('accounts').select('account_id').limit(1).execute()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/postgrest/_async/request_builder.py", line 78, in execute
+    raise APIError(r.json())
+postgrest.exceptions.APIError: {'code': '42P01', 'details': None, 'hint': None, 'message': 'relation "public.accounts" does not exist'}
+
+
+################################################################################
+RUNNING TEST CASE: Browser Navigation Test
+################################################################################
+
+================================================================================
+🧪 RUNNING TEST CASE: Browser Navigation Test
+================================================================================
+Prompt: Navigate to example.com and tell me the title of the page
+Expected Tools: browser_navigate_to
+--------------------------------------------------------------------------------
+
+🔍 Checking for existing test account...
+2025-05-04 02:04:27,312 - httpx - INFO - HTTP Request: GET https://hrffzolutdfpaplntjkx.supabase.co/rest/v1/accounts?select=account_id&limit=1 "HTTP/2 404 Not Found"
+❌ Error running test case: {'code': '42P01', 'details': None, 'hint': None, 'message': 'relation "public.accounts" does not exist'}
+Traceback (most recent call last):
+  File "/app/comprehensive_tool_test.py", line 172, in run_test_case
+    accounts = await client.table('accounts').select('account_id').limit(1).execute()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/postgrest/_async/request_builder.py", line 78, in execute
+    raise APIError(r.json())
+postgrest.exceptions.APIError: {'code': '42P01', 'details': None, 'hint': None, 'message': 'relation "public.accounts" does not exist'}
+
+
+################################################################################
+RUNNING TEST CASE: Combined Tools Test
+################################################################################
+
+================================================================================
+🧪 RUNNING TEST CASE: Combined Tools Test
+================================================================================
+Prompt: Create a todo list for researching AI startups, then navigate to Y Combinator's website to find information about AI startups they've funded
+Expected Tools: browser_navigate_to, ensure_todo_exists
+--------------------------------------------------------------------------------
+
+🔍 Checking for existing test account...
+2025-05-04 02:04:27,378 - httpx - INFO - HTTP Request: GET https://hrffzolutdfpaplntjkx.supabase.co/rest/v1/accounts?select=account_id&limit=1 "HTTP/2 404 Not Found"
+❌ Error running test case: {'code': '42P01', 'details': None, 'hint': None, 'message': 'relation "public.accounts" does not exist'}
+Traceback (most recent call last):
+  File "/app/comprehensive_tool_test.py", line 172, in run_test_case
+    accounts = await client.table('accounts').select('account_id').limit(1).execute()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/postgrest/_async/request_builder.py", line 78, in execute
+    raise APIError(r.json())
+postgrest.exceptions.APIError: {'code': '42P01', 'details': None, 'hint': None, 'message': 'relation "public.accounts" does not exist'}
+
+
+================================================================================
+OVERALL TEST RESULTS
+================================================================================
+Todo List Test: ❌ FAILED - 
+Browser Navigation Test: ❌ FAILED - 
+Combined Tools Test: ❌ FAILED - 
+--------------------------------------------------------------------------------
+Pass Rate: 0.00% (0/3)

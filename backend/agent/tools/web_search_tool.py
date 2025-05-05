@@ -7,6 +7,11 @@ from dotenv import load_dotenv
 from agentpress.tool import Tool, ToolResult, openapi_schema, xml_schema
 from utils.config import config
 import json
+import re
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # TODO: add subpages, etc... in filters as sometimes its necessary 
 
@@ -87,16 +92,21 @@ class WebSearchTool(Tool):
         </web-search>
         '''
     )
-    async def web_search(
-        self, 
-        query: str, 
-        # summary: bool = True,
-        num_results: int = 20
-    ) -> ToolResult:
+    async def web_search(self, query: str, num_results: int = 20) -> ToolResult:
         """
         Search the web using the Tavily API to find relevant and up-to-date information.
+        
+        Args:
+            query: The search query
+            num_results: The number of results to return
+            
+        Returns:
+            ToolResult containing the search results with enhanced information
         """
         try:
+            # Log the query to aid in debugging
+            logger.info(f"WebSearchTool: Processing query '{query}'")
+            
             # Ensure we have a valid query
             if not query or not isinstance(query, str):
                 return self.fail_response("A valid search query is required.")
@@ -118,8 +128,9 @@ class WebSearchTool(Tool):
             search_response = await self.tavily_client.search(
                 query=query,
                 max_results=num_results,
-                include_answer=False,
+                include_answer=True,  # Get the answer for better results
                 include_images=False,
+                include_raw_content=True,  # Ensure we get raw content for processing
             )
 
             # Normalize the response format
@@ -129,36 +140,188 @@ class WebSearchTool(Tool):
                 else search_response
             )
 
-            # Format results consistently
-            formatted_results = []
-            for result in raw_results:
-                formatted_result = {
-                    "title": result.get("title", ""),
-                    "url": result.get("url", ""),
-                }
-
-                # if summary:
-                #     # Prefer full content; fall back to description
-                #     formatted_result["snippet"] = (
-                #         result.get("content") or 
-                #         result.get("description") or 
-                #         ""
-                #     )
-
-                formatted_results.append(formatted_result)
+            # Check if we have any results
+            if not raw_results:
+                logger.warning("No search results found")
+                return self.success_response({
+                    "results": [],
+                    "message": "No search results found. Consider refining your query or using browser navigation.",
+                    "status": "no_results"
+                })
+                
+            # Process the results to extract the most relevant information
+            enhanced_results = self._process_search_results(raw_results, query)
             
-            # Return a properly formatted ToolResult
-            return ToolResult(
-                success=True,
-                output=json.dumps(formatted_results, ensure_ascii=False)
-            )
-        
+            # Add metadata to help the agent understand the results
+            response = {
+                "results": enhanced_results,
+                "original_query": query,
+                "result_count": len(enhanced_results),
+                "status": "success",
+                "message": f"Found {len(enhanced_results)} results for '{query}'"
+            }
+            
+            # For weather queries, try to extract actual weather information
+            if self._is_weather_query(query):
+                logger.info(f"WebSearchTool: Processing weather query: {query}")
+                try:
+                    # Extract location from the query
+                    location = self._extract_location(query)
+                    logger.info(f"WebSearchTool: Extracted location: {location}")
+                    
+                    # Extract weather details from search results
+                    weather_data = self._extract_weather_data(enhanced_results)
+                    logger.info(f"WebSearchTool: Extracted weather data: {weather_data}")
+                    
+                    if weather_data.get("temperature") or weather_data.get("conditions"):
+                        # Format weather information into a readable response
+                        weather_info = self._format_weather_response(location, weather_data)
+                        response["weather_summary"] = weather_info
+                except Exception as weather_error:
+                    # Log but don't fail - fall back to regular search results
+                    logger.error(f"WebSearchTool: Error processing weather data: {str(weather_error)}")
+            
+            return self.success_response(response)
+            
         except Exception as e:
-            error_message = str(e)
-            simplified_message = f"Error performing web search: {error_message[:200]}"
-            if len(error_message) > 200:
-                simplified_message += "..."
-            return self.fail_response(simplified_message)
+            logger.error(f"Error searching web: {e}")
+            return self.fail_response(f"Error searching web: {e}")
+            
+    def _process_search_results(self, results, query):
+        """Process search results to extract the most relevant information.
+        
+        Args:
+            results: The raw search results from Tavily
+            query: The original search query
+            
+        Returns:
+            Enhanced results with extracted information
+        """
+        formatted_results = []
+        for result in results:
+            formatted_result = {
+                "title": result.get("title", ""),
+                "url": result.get("url", ""),
+                "snippet": result.get("content") or result.get("description") or "",
+            }
+            
+            formatted_results.append(formatted_result)
+        
+        return formatted_results
+    
+    def _is_weather_query(self, query: str) -> bool:
+        """Determine if a query is asking about weather."""
+        weather_patterns = [
+            r'weather\s+in\s+(\w+)',
+            r'(\w+)\s+weather',
+            r'temperature\s+in\s+(\w+)',
+            r'how\s+is\s+the\s+weather\s+in\s+(\w+)',
+            r'forecast\s+for\s+(\w+)',
+            r'weather\s+for\s+(\w+)',
+            r'weather\s+like\s+in\s+(\w+)'
+        ]
+        
+        for pattern in weather_patterns:
+            if re.search(pattern, query.lower()):
+                return True
+                
+        return False
+    
+    def _extract_location(self, query: str) -> str:
+        """Extract location from a weather query."""
+        patterns = [
+            r'weather\s+in\s+([A-Za-z\s,]+)(?:\W|$)',
+            r'([A-Za-z\s,]+)\s+weather',
+            r'temperature\s+in\s+([A-Za-z\s,]+)(?:\W|$)',
+            r'how\s+is\s+the\s+weather\s+in\s+([A-Za-z\s,]+)(?:\W|$)',
+            r'forecast\s+for\s+([A-Za-z\s,]+)(?:\W|$)',
+            r'weather\s+for\s+([A-Za-z\s,]+)(?:\W|$)',
+            r'weather\s+like\s+in\s+([A-Za-z\s,]+)(?:\W|$)'
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, query, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+                
+        return "the requested location"
+    
+    def _extract_weather_data(self, search_results: list) -> dict:
+        """Extract weather data from search results."""
+        weather_data = {
+            "temperature": None,
+            "conditions": None,
+            "feels_like": None,
+            "humidity": None,
+            "wind": None,
+            "forecast": None
+        }
+        
+        condition_keywords = [
+            "sunny", "cloudy", "partly cloudy", "overcast", "rain", "raining",
+            "snow", "snowing", "thunderstorm", "fog", "foggy", "haze", "hazy",
+            "clear", "fair", "windy", "stormy", "showers", "drizzle"
+        ]
+        
+        # Process snippets to extract weather information
+        for result in search_results:
+            snippet = result.get("snippet", "").lower()
+            
+            # Temperature extraction (prioritize exact matches first)
+            if not weather_data["temperature"]:
+                temp_matches = re.findall(r'(\d+)[°]?[cf]', snippet)
+                if temp_matches:
+                    weather_data["temperature"] = f"{temp_matches[0]}°"
+                
+            # Conditions extraction
+            if not weather_data["conditions"]:
+                for keyword in condition_keywords:
+                    if keyword in snippet:
+                        weather_data["conditions"] = keyword
+                        break
+                    
+            # Other weather data extraction
+            if not weather_data["feels_like"]:
+                feels_like_matches = re.findall(r'feels like (\d+)[°]?[cf]', snippet)
+                if feels_like_matches:
+                    weather_data["feels_like"] = f"{feels_like_matches[0]}°"
+                    
+            if not weather_data["humidity"]:
+                humidity_matches = re.findall(r'humidity[:\s]+(\d+)%', snippet)
+                if humidity_matches:
+                    weather_data["humidity"] = f"{humidity_matches[0]}%"
+                    
+            if not weather_data["wind"]:
+                wind_matches = re.findall(r'wind[:\s]+(\d+\s*mph)', snippet)
+                if wind_matches:
+                    weather_data["wind"] = wind_matches[0]
+                    
+            if not weather_data["forecast"] and ("forecast" in snippet or "expected" in snippet or "will be" in snippet):
+                weather_data["forecast"] = snippet
+        
+        return weather_data
+    
+    def _format_weather_response(self, location: str, weather_data: dict) -> str:
+        """Format weather data into a human-readable response."""
+        weather_info = [f"Current weather in {location}:"]
+        
+        if weather_data["temperature"] and weather_data["conditions"]:
+            weather_info.append(f"Temperature: {weather_data['temperature']}, Conditions: {weather_data['conditions']}")
+        elif weather_data["temperature"]:
+            weather_info.append(f"Temperature: {weather_data['temperature']}")
+        elif weather_data["conditions"]:
+            weather_info.append(f"Conditions: {weather_data['conditions']}")
+            
+        if weather_data["feels_like"]:
+            weather_info.append(f"Feels like: {weather_data['feels_like']}")
+        if weather_data["humidity"]:
+            weather_info.append(f"Humidity: {weather_data['humidity']}")
+        if weather_data["wind"]:
+            weather_info.append(f"Wind: {weather_data['wind']}")
+        if weather_data["forecast"]:
+            weather_info.append(f"Forecast: {weather_data['forecast'][:100]}...")
+            
+        return "\n".join(weather_info)
 
     @openapi_schema({
         "type": "function",
@@ -307,11 +470,19 @@ if __name__ == "__main__":
         """Test function for the web search tool"""
         search_tool = WebSearchTool()
         result = await search_tool.web_search(
-            query="rubber gym mats best prices comparison",
-            # summary=True,
+            query="weather in Chicago",
             num_results=20
         )
-        print(result)
+        print(f"Weather query test result: {result}")
+        print(f"Output: {result.output if hasattr(result, 'output') else 'No output'}")
+        print(f"Message: {result.message if hasattr(result, 'message') else 'No message'}")
+        
+        # Test a non-weather query
+        result2 = await search_tool.web_search(
+            query="latest AI research",
+            num_results=5
+        )
+        print(f"Regular query test result: {result2}")
     
     async def test_scrape_webpage():
         """Test function for the webpage scrape tool"""
@@ -323,7 +494,9 @@ if __name__ == "__main__":
     
     async def run_tests():
         """Run all test functions"""
+        print("Testing weather query...")
         await test_web_search()
+        print("\nTesting webpage scraping...")
         await test_scrape_webpage()
         
     asyncio.run(run_tests())

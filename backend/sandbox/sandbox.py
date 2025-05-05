@@ -1,5 +1,4 @@
 import os
-import uuid
 from typing import Optional
 
 from daytona_sdk import Daytona, DaytonaConfig, CreateSandboxParams, Sandbox, SessionExecuteRequest
@@ -44,34 +43,6 @@ async def get_or_start_sandbox(sandbox_id: str):
     
     logger.info(f"Getting or starting sandbox with ID: {sandbox_id}")
     
-    # Check if this is a mock sandbox ID
-    if sandbox_id.startswith('mock-sandbox-'):
-        logger.info(f"Using mock sandbox: {sandbox_id}")
-        # Create a mock sandbox with the same ID
-        from collections import namedtuple
-        MockSandbox = namedtuple('MockSandbox', ['id', 'instance', 'process', 'get_preview_link'])
-        MockInstance = namedtuple('MockInstance', ['state'])
-        MockProcess = namedtuple('MockProcess', ['create_session', 'execute_session_command'])
-        MockPreviewLink = namedtuple('MockPreviewLink', ['url', 'token'])
-        
-        # Create mock objects
-        mock_process = MockProcess(
-            create_session=lambda session_id: None,
-            execute_session_command=lambda session_id, cmd: None
-        )
-        mock_instance = MockInstance(state=WorkspaceState.RUNNING)
-        mock_preview_link = MockPreviewLink(url="http://localhost:8080", token="mock-token")
-        
-        # Create mock sandbox
-        sandbox = MockSandbox(
-            id=sandbox_id,
-            instance=mock_instance,
-            process=mock_process,
-            get_preview_link=lambda port: mock_preview_link
-        )
-        logger.info(f"Mock sandbox {sandbox_id} is ready")
-        return sandbox
-    
     try:
         sandbox = daytona.get_current_sandbox(sandbox_id)
         
@@ -98,15 +69,10 @@ async def get_or_start_sandbox(sandbox_id: str):
         logger.error(f"Error retrieving or starting sandbox: {str(e)}")
         raise e
 
-def start_supervisord_session(sandbox):
+def start_supervisord_session(sandbox: Sandbox):
     """Start supervisord in a session."""
     session_id = "supervisord-session"
     try:
-        # Check if this is a real Sandbox object or our mock
-        if hasattr(sandbox, 'id') and sandbox.id.startswith('mock-sandbox-'):
-            logger.info(f"Skipping supervisord session for mock sandbox {sandbox.id}")
-            return
-            
         logger.info(f"Creating session {session_id} for supervisord")
         sandbox.process.create_session(session_id)
         
@@ -118,10 +84,7 @@ def start_supervisord_session(sandbox):
         logger.info(f"Supervisord started in session {session_id}")
     except Exception as e:
         logger.error(f"Error starting supervisord session: {str(e)}")
-        if hasattr(sandbox, 'id') and sandbox.id.startswith('mock-sandbox-'):
-            logger.warning(f"Ignoring error for mock sandbox: {str(e)}")
-        else:
-            raise e
+        raise e
 
 def create_sandbox(password: str, project_id: str = None):
     """Create a new sandbox with all required services configured and running."""
@@ -159,38 +122,8 @@ def create_sandbox(password: str, project_id: str = None):
     )
     
     # Create the sandbox
-    try:
-        sandbox = daytona.create(params)
-        logger.debug(f"Sandbox created with ID: {sandbox.id}")
-    except Exception as e:
-        if "Workspace quota exceeded" in str(e) and config.DAYTONA_BYPASS_QUOTA:
-            logger.warning(f"Workspace quota exceeded but DAYTONA_BYPASS_QUOTA is enabled. Creating mock sandbox for local development.")
-            # Create a mock sandbox with a fake ID for local development
-            from collections import namedtuple
-            MockSandbox = namedtuple('MockSandbox', ['id', 'instance', 'process', 'get_preview_link'])
-            MockInstance = namedtuple('MockInstance', ['state'])
-            MockProcess = namedtuple('MockProcess', ['create_session', 'execute_session_command'])
-            MockPreviewLink = namedtuple('MockPreviewLink', ['url', 'token'])
-            
-            # Create mock objects
-            mock_process = MockProcess(
-                create_session=lambda session_id: None,
-                execute_session_command=lambda session_id, cmd: None
-            )
-            mock_instance = MockInstance(state=WorkspaceState.RUNNING)
-            mock_preview_link = MockPreviewLink(url="http://localhost:8080", token="mock-token")
-            
-            # Create mock sandbox
-            sandbox = MockSandbox(
-                id=f"mock-sandbox-{uuid.uuid4()}",
-                instance=mock_instance,
-                process=mock_process,
-                get_preview_link=lambda port: mock_preview_link
-            )
-            logger.debug(f"Created mock sandbox with ID: {sandbox.id}")
-        else:
-            # Re-raise the exception if it's not a quota issue or if bypass is disabled
-            raise
+    sandbox = daytona.create(params)
+    logger.debug(f"Sandbox created with ID: {sandbox.id}")
     
     # Start supervisord in a session for new sandbox
     start_supervisord_session(sandbox)

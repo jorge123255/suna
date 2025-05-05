@@ -34,7 +34,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip"
-import { getProjects, getThreads, Project } from "@/lib/api"
+import { getProjects, getThreads, deleteThread, deleteAllThreads, Project } from "@/lib/api"
 import Link from "next/link"
 
 // Thread with associated project info for display in sidebar
@@ -184,7 +184,35 @@ export function NavAgents() {
   return (
     <SidebarGroup>
       <div className="flex justify-between items-center">
-        <SidebarGroupLabel>Agents</SidebarGroupLabel>
+        <div className="flex items-center gap-2">
+          <SidebarGroupLabel>Agents</SidebarGroupLabel>
+          {state !== "collapsed" && threads.length > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={async () => {
+                    try {
+                      const confirmed = window.confirm('Are you sure you want to delete ALL conversations? This action cannot be undone.');
+                      if (confirmed) {
+                        await deleteAllThreads();
+                        toast.success('All conversations deleted successfully');
+                        setThreads([]);
+                        router.push('/dashboard');
+                      }
+                    } catch (error) {
+                      console.error('Error deleting all threads:', error);
+                      toast.error('Failed to delete all conversations');
+                    }
+                  }}
+                  className="text-muted-foreground hover:text-destructive text-xs font-medium hover:underline"
+                >
+                  Delete All
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Delete all conversations</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
         {state !== "collapsed" ? (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -293,7 +321,24 @@ export function NavAgents() {
                           </a>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={async () => {
+                          try {
+                            const confirmed = window.confirm(`Are you sure you want to delete this conversation?`);
+                            if (confirmed) {
+                              await deleteThread(thread.threadId);
+                              toast.success("Conversation deleted successfully");
+                              // Remove the thread from the local state
+                              setThreads(threads.filter(t => t.threadId !== thread.threadId));
+                              // If we're on the deleted thread's page, redirect to dashboard
+                              if (pathname?.includes(thread.threadId)) {
+                                router.push('/dashboard');
+                              }
+                            }
+                          } catch (error) {
+                            console.error("Error deleting thread:", error);
+                            toast.error("Failed to delete conversation");
+                          }
+                        }}>
                           <Trash2 className="text-muted-foreground" />
                           <span>Delete</span>
                         </DropdownMenuItem>

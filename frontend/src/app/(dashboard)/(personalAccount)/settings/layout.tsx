@@ -10,6 +10,7 @@ export default function PersonalAccountSettingsPage({children}: {children: React
         // { name: "Profile", href: "/settings" },
         // { name: "Teams", href: "/settings/teams" },
         { name: "Billing", href: "/settings/billing" },
+        { name: "Models", href: "/settings/models" },
     ]
     return (
         <div className="space-y-6 w-full">

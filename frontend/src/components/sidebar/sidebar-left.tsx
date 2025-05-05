@@ -8,6 +8,7 @@ import { NavAgents } from "@/components/sidebar/nav-agents"
 import { NavUserWithTeams } from "@/components/sidebar/nav-user-with-teams"
 import { KortixLogo } from "@/components/sidebar/kortix-logo"
 import { CTACard } from "@/components/sidebar/cta"
+import { ModelSelector } from "@/components/model-selector"
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +16,8 @@ import {
   SidebarHeader,
   SidebarRail,
   SidebarTrigger,
+  SidebarGroup,
+  SidebarGroupLabel,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useEffect, useState } from "react"
@@ -117,6 +120,25 @@ export function SidebarLeft({
         </div>
       </SidebarHeader>
       <SidebarContent className="[&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+        <SidebarGroup>
+          <SidebarGroupLabel>
+            <div className="flex items-center justify-between">
+              <span>Models</span>
+            </div>
+          </SidebarGroupLabel>
+          <div className="px-3 py-2">
+            <ModelSelector />
+          </div>
+          <div className="px-3 py-2">
+            <Link 
+              href="/model-selection-dashboard" 
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bar-chart-2"><line x1="18" x2="18" y1="20" y2="10"></line><line x1="12" x2="12" y1="20" y2="4"></line><line x1="6" x2="6" y1="20" y2="14"></line></svg>
+              Model Selection Stats
+            </Link>
+          </div>
+        </SidebarGroup>
         <NavAgents />
       </SidebarContent>
       {state !== "collapsed" && (
