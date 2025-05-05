@@ -287,15 +287,30 @@ def register_agent_tools(agent, thread_id, thread_manager):
         agent.register_tool(
             MarketResearchTool,
             thread_id=thread_id,
-            thread_manager=thread_manager
+            thread_manager=thread_manager,
+            project_id=agent.project_id
         )
         
         # Register the todo generator tool
-        agent.register_tool(
+        todo_tool = agent.register_tool(
             TodoGeneratorTool,
             project_id=agent.project_id,
             thread_manager=thread_manager
         )
+        
+        # Add a hook to automatically create a todo at the start of a task
+        def on_task_start(task_description):
+            # Get the first message which should contain the task description
+            if task_description and isinstance(task_description, str):
+                logger.info(f"Automatically creating todo for task: {task_description[:50]}...")
+                # Use the todo generator tool to create a todo
+                return todo_tool.ensure_todo_exists(task_description=task_description, overwrite=True)
+            return None
+        
+        # Register the hook with the agent
+        if hasattr(agent, 'register_task_start_hook'):
+            agent.register_task_start_hook(on_task_start)
+            logger.info("Registered task start hook for todo generation")
         
         logger.info("Successfully registered tools with agent")
         

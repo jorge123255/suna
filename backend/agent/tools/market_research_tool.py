@@ -12,14 +12,27 @@ from agentpress.tool import Tool, ToolResult, openapi_schema, xml_schema
 from agentpress.thread_manager import ThreadManager
 from utils.logger import logger
 import traceback
+from sandbox.sandbox import SandboxToolsBase
 
 class MarketResearchTool(Tool):
     """Tool for conducting comprehensive market research and generating reports."""
     
-    def __init__(self, thread_id: str = None, thread_manager: Optional[ThreadManager] = None):
+    def __init__(self, thread_id: str = None, thread_manager: Optional[ThreadManager] = None, project_id: str = None):
         super().__init__()
         self.thread_id = thread_id
         self.thread_manager = thread_manager
+        self.project_id = project_id
+        
+        # Initialize todo generator if we have the necessary parameters
+        self.todo_generator = None
+        if project_id and thread_manager:
+            try:
+                from agent.tools.todo_generator_tool import TodoGeneratorTool
+                self.todo_generator = TodoGeneratorTool(project_id=project_id, thread_manager=thread_manager)
+                logger.info("TodoGeneratorTool initialized for MarketResearchTool")
+            except Exception as e:
+                logger.error(f"Failed to initialize TodoGeneratorTool: {str(e)}")
+                traceback.print_exc()
     
     @openapi_schema({
         "type": "function",
@@ -89,6 +102,20 @@ class MarketResearchTool(Tool):
         try:
             logger.info(f"Starting market research for: {industry}")
             
+            # First, ensure a todo list is created for this market research task
+            if self.todo_generator:
+                try:
+                    # Create a task description that includes the industry
+                    task_description = f"Market research for {industry}"
+                    # Ensure the todo list exists and is up to date
+                    todo_result = await self.todo_generator.ensure_todo_exists(task_description=task_description, overwrite=True)
+                    logger.info(f"Todo list creation result: {todo_result.message}")
+                except Exception as e:
+                    logger.error(f"Error creating todo list: {str(e)}")
+                    # Continue with market research even if todo creation fails
+            else:
+                logger.warning("TodoGeneratorTool not initialized, skipping todo list creation")
+            
             # Create a structured research plan
             research_plan = {
                 "industry": industry,
@@ -106,6 +133,9 @@ class MarketResearchTool(Tool):
             
             # Log the research plan
             logger.info(f"Market research plan created: {json.dumps(research_plan)}")
+            
+            # Remind the user to check the todo list
+            research_plan["note"] = "A detailed todo list has been created to guide this market research task. Please check the todo.md file for the structured plan."
             
             # Return the research plan to guide the agent's research process
             return self.success_response({
