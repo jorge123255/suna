@@ -103,6 +103,7 @@ class MarketResearchTool(Tool):
             logger.info(f"Starting market research for: {industry}")
             
             # First, ensure a todo list is created for this market research task
+            todo_created = False
             if self.todo_generator:
                 try:
                     # Create a task description that includes the industry
@@ -110,11 +111,25 @@ class MarketResearchTool(Tool):
                     # Ensure the todo list exists and is up to date
                     todo_result = await self.todo_generator.ensure_todo_exists(task_description=task_description, overwrite=True)
                     logger.info(f"Todo list creation result: {todo_result.message}")
+                    todo_created = True
                 except Exception as e:
                     logger.error(f"Error creating todo list: {str(e)}")
                     # Continue with market research even if todo creation fails
             else:
-                logger.warning("TodoGeneratorTool not initialized, skipping todo list creation")
+                # If todo_generator is not available, try to create it now
+                logger.warning("TodoGeneratorTool not initialized, attempting to create it now")
+                try:
+                    from agent.tools.todo_generator_tool import TodoGeneratorTool
+                    if self.project_id and self.thread_manager:
+                        self.todo_generator = TodoGeneratorTool(project_id=self.project_id, thread_manager=self.thread_manager)
+                        # Try again to create the todo list
+                        task_description = f"Market research for {industry}"
+                        todo_result = await self.todo_generator.ensure_todo_exists(task_description=task_description, overwrite=True)
+                        logger.info(f"Todo list creation result (retry): {todo_result.message}")
+                        todo_created = True
+                except Exception as e:
+                    logger.error(f"Failed to initialize TodoGeneratorTool on retry: {str(e)}")
+                    traceback.print_exc()
             
             # Create a structured research plan
             research_plan = {
@@ -135,7 +150,14 @@ class MarketResearchTool(Tool):
             logger.info(f"Market research plan created: {json.dumps(research_plan)}")
             
             # Remind the user to check the todo list
-            research_plan["note"] = "A detailed todo list has been created to guide this market research task. Please check the todo.md file for the structured plan."
+            if todo_created:
+                research_plan["todo_list_created"] = True
+                research_plan["note"] = "IMPORTANT: A detailed todo list has been created to guide this market research task. Please check the todo.md file for the structured plan."
+                # Add the todo list as the first step in the research steps
+                research_plan["research_steps"].insert(0, "0. Review the generated todo.md file for a detailed research plan")
+            else:
+                research_plan["todo_list_created"] = False
+                research_plan["note"] = "Note: Could not create a todo list. Please manually create a structured plan for this research task."
             
             # Return the research plan to guide the agent's research process
             return self.success_response({

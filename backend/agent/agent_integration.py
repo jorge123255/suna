@@ -276,25 +276,25 @@ def register_agent_tools(agent, thread_id, thread_manager):
         # Register tools with the agent
         logger.info("Registering tools with agent")
         
-        # Register the browser takeover tool
-        agent.register_tool(
-            BrowserTakeoverTool,
-            thread_id=thread_id,
+        # Register the todo generator tool FIRST to ensure it's prioritized
+        todo_tool = agent.register_tool(
+            TodoGeneratorTool,
+            project_id=agent.project_id,
             thread_manager=thread_manager
         )
         
         # Register the market research tool
-        agent.register_tool(
+        market_tool = agent.register_tool(
             MarketResearchTool,
             thread_id=thread_id,
             thread_manager=thread_manager,
             project_id=agent.project_id
         )
         
-        # Register the todo generator tool
-        todo_tool = agent.register_tool(
-            TodoGeneratorTool,
-            project_id=agent.project_id,
+        # Register the browser takeover tool
+        agent.register_tool(
+            BrowserTakeoverTool,
+            thread_id=thread_id,
             thread_manager=thread_manager
         )
         
